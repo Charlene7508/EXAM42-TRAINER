@@ -1659,7 +1659,7 @@ function renderExercise(){
   $("#content").innerHTML = `
     <div class="panel left">
       <div class="pretitle">${ex.group} · ${diffLabel(ex.diff)}</div>
-      <h2 class="title"><span class="num">${String(EXERCISES.indexOf(ex)+1).padStart(2,"0")}</span>${ex.title}</h2>
+      <h2 class="title">${ex.title}</h2>
       <div class="meta-row">
         <span class="diff ${ex.diff==='easy'?'easy':ex.diff==='medium'?'med':'hard'}">${diffLabel(ex.diff)}</span>
         <span class="tagline">signature : <code>${ex.sig}</code></span>
