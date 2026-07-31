@@ -1516,7 +1516,7 @@ def sliding_window_maximium(nums, k):
       {in:'package_dependency_resolver({"app": ["database"], "database": ["driver"], "driver": []})', out:'["driver", "database", "app"]'},
       {in:'package_dependency_resolver({"A": [], "B": ["A"], "C": ["A", "B"]})', out:'["A", "B", "C"]'},
       {in:'package_dependency_resolver({"X": ["Y"], "Y": ["X"]})', out:"[]"},
-      {in:'package_dependency_resolver({"web": [], "api": [], "frontend": ["web"], "backend": ["api"]})', out:'["api", "web", "backend", "frontend"]'},
+      {in:'package_dependency_resolver({"web": [], "api": [], "frontend": ["web"], "backend": ["api"]})', out:'["api", "backend", "web", "frontend"]'},
     ],
     hints:["Algorithme de Kahn : compte les dépendances restantes de chaque paquet (in-degree), traite ceux à 0.","Pour la sortie déterministe, utilise un tas (heapq) ou trie la liste des paquets disponibles à chaque itération.","Si à la fin tous les paquets n'ont pas été traités → cycle → retourne []. Filtre d'abord les dépendances vers des paquets inexistants."],
     sig:"def package_dependency_resolver(packages: dict[str, list[str]]) -> list[str]:",
@@ -1528,13 +1528,15 @@ def sliding_window_maximium(nums, k):
       {args:[{"A":[],"B":["A"],"C":["A","B"]}], out:["A","B","C"]},
       {args:[{}], out:[]},
       {args:[{"X":["Y"],"Y":["X"]}], out:[]},
-      {args:[{"web":[],"api":[],"frontend":["web"],"backend":["api"]}], out:["api","web","backend","frontend"]},
+      {args:[{"web":[],"api":[],"frontend":["web"],"backend":["api"]}], out:["api","backend","web","frontend"]},
       {args:[{"A":["A"]}], out:[]},
       {args:[{"A":["Z"],"B":["A"]}], out:["A","B"]},
       {args:[{"solo":[]}], out:["solo"]},
     ],
     solutions:[
-      {name:"Kahn par vagues (in-degree)", time:"O(V² + E)", space:"O(V + E)", code:`def package_dependency_resolver(packages):
+      {name:"Kahn + heapq (référence standard)", time:"O(V log V + E)", space:"O(V + E)", code:`import heapq
+
+def package_dependency_resolver(packages):
     # Filtrer les dépendances vers des paquets inexistants
     deps = {p: [d for d in ds if d in packages]
             for p, ds in packages.items()}
@@ -1553,38 +1555,52 @@ def sliding_window_maximium(nums, k):
         for d in ds:
             dependents[d].append(p)
 
+    # tas : on dépile TOUJOURS le plus petit paquet DISPONIBLE,
+    # sans attendre que tout un "niveau" soit traité
+    ready = [p for p, deg in in_degree.items() if deg == 0]
+    heapq.heapify(ready)
+
     result = []
-    # On traite VAGUE par VAGUE : tous les paquets prêts
-    # en même temps sont ajoutés (triés) avant de débloquer la suite
-    while len(result) < len(deps):
-        ready = sorted(p for p, deg in in_degree.items()
-                       if deg == 0 and p not in result)
-        if not ready:
-            return []   # aucun paquet prêt mais il en reste → cycle
-        for p in ready:
-            result.append(p)
-            for dep in dependents[p]:
-                in_degree[dep] -= 1
-    return result`},
-      {name:"Kahn + sorted à chaque tour", time:"O(V² log V)", space:"O(V + E)", code:`def package_dependency_resolver(packages):
-    deps = {p: {d for d in ds if d in packages}
+    while ready:
+        p = heapq.heappop(ready)
+        result.append(p)
+        for dep in dependents[p]:
+            in_degree[dep] -= 1
+            if in_degree[dep] == 0:
+                heapq.heappush(ready, dep)
+
+    return result if len(result) == len(deps) else []`},
+      {name:"DFS + tri (post-ordre inversé)", time:"O(V + E) + O(V log V)", space:"O(V + E)", code:`def package_dependency_resolver(packages):
+    deps = {p: [d for d in ds if d in packages]
             for p, ds in packages.items()}
 
     for p, ds in deps.items():
         if p in ds:
             return []
 
+    visited = set()
+    in_progress = set()
     result = []
-    remaining = dict(deps)
-    while remaining:
-        ready = sorted(p for p, ds in remaining.items() if not ds)
-        if not ready:
-            return []   # cycle : personne n'est prêt
-        for p in ready:
-            result.append(p)
-            del remaining[p]
-            for ds in remaining.values():
-                ds.discard(p)
+
+    def visit(p):
+        if p in visited:
+            return True
+        if p in in_progress:
+            return False   # cycle détecté
+        in_progress.add(p)
+        for d in deps[p]:
+            if not visit(d):
+                return False
+        in_progress.discard(p)
+        visited.add(p)
+        result.append(p)
+        return True
+
+    # ordre alphabétique de départ pour un résultat déterministe
+    for p in sorted(deps):
+        if not visit(p):
+            return []
+
     return result`},
     ]
   },
