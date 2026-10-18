@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>exam42 · python trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+<style>
+  :root{
+    --bg:#0d0e0c;
+    --bg-2:#151714;
+    --bg-3:#1c1f1b;
+    --ink:#e9e6dc;
+    --ink-dim:#8a8b80;
+    --ink-faint:#4a4b44;
+    --rule:#26271f;
+    --accent:#c8ff4c;
+    --accent-dim:#7a9a2e;
+    --red:#ff6b5b;
+    --amber:#ffb74d;
+    --blue:#7ec5ff;
+    --easy:#7cbf5e;
+    --med:#e6a23c;
+    --hard:#d65a5a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(200,255,76,0.04), transparent 60%),
+      radial-gradient(800px 500px at 10% 110%, rgba(126,197,255,0.025), transparent 60%),
+      var(--bg);
+    min-height:100vh;
+  }
+  ::selection{background:var(--accent);color:#000}
+  /* grain overlay */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1000;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity:0.4;mix-blend-mode:overlay;
+  }
+
+  /* ===== Layout ===== */
+  .shell{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+  @media (max-width:900px){.shell{grid-template-columns:1fr}}
+
+  /* ===== Sidebar ===== */
+  aside{
+    border-right:1px solid var(--rule);
+    background:var(--bg-2);
+    padding:28px 0 24px;
+    position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  aside::-webkit-scrollbar{width:6px}
+  aside::-webkit-scrollbar-thumb{background:var(--rule)}
+  .brand{padding:0 24px 24px;border-bottom:1px solid var(--rule)}
+  .brand .tag{font-size:10px;letter-spacing:0.05em;color:var(--ink-dim);margin-bottom:8px}
+  .brand h1{
+    font-family:'Fraunces',serif;font-weight:300;font-style:italic;
+    font-size:34px;line-height:1;letter-spacing:-0.02em;margin:0;
+  }
+  .brand h1 .acc{color:var(--accent);font-style:normal;font-weight:600}
+  .brand .sub{margin-top:10px;color:var(--ink-dim);font-size:11px;letter-spacing:0.05em}
+
+  .filter-bar{padding:16px 24px;border-bottom:1px solid var(--rule);display:flex;gap:6px;flex-wrap:wrap}
+  .chip{
+    font-family:inherit;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+    background:transparent;border:1px solid var(--rule);color:var(--ink-dim);
+    padding:5px 10px;cursor:pointer;transition:all 0.15s;
+  }
+  .chip:hover{color:var(--ink);border-color:var(--ink-dim)}
+  .chip.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  .ex-list{padding:8px 0}
+  .ex-group-label{
+    padding:14px 24px 6px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .ex-item{
+    display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;
+    padding:9px 24px;cursor:pointer;border-left:2px solid transparent;
+    transition:background 0.12s,border-color 0.12s;
+  }
+  .ex-item:hover{background:rgba(255,255,255,0.02)}
+  .ex-item.active{background:var(--bg-3);border-left-color:var(--accent)}
+  .ex-num{color:var(--ink-faint);font-size:11px;font-variant-numeric:tabular-nums}
+  .ex-title{font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .diff{
+    font-size:9px;letter-spacing:0.12em;text-transform:uppercase;
+    padding:2px 6px;border:1px solid currentColor;border-radius:2px;
+  }
+  .diff.easy{color:var(--easy)}
+  .diff.med{color:var(--med)}
+  .diff.hard{color:var(--hard)}
+
+  /* ===== Main ===== */
+  main{padding:0;overflow:hidden}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 32px;border-bottom:1px solid var(--rule);
+    font-size:11px;color:var(--ink-dim);letter-spacing:0.05em;
+  }
+  .topbar .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:8px;animation:pulse 2s infinite}
+  .topbar.ready .dot{background:var(--easy);animation:none}
+  @keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+
+  .content{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 47px)}
+  @media (max-width:1100px){.content{grid-template-columns:1fr;height:auto}}
+
+  /* ===== Statement panel ===== */
+  .panel{overflow-y:auto;padding:36px 40px}
+  .panel::-webkit-scrollbar{width:8px}
+  .panel::-webkit-scrollbar-thumb{background:var(--rule)}
+
+  .left{border-right:1px solid var(--rule)}
+  .pretitle{font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+  h2.title{
+    font-family:'Fraunces',serif;font-weight:400;font-size:42px;line-height:1.05;
+    letter-spacing:-0.02em;margin:0 0 6px;
+  }
+  h2.title .num{color:var(--ink-faint);font-style:italic;font-weight:300;margin-right:14px}
+  .meta-row{display:flex;gap:14px;align-items:center;margin:18px 0 28px;padding-bottom:18px;border-bottom:1px solid var(--rule)}
+  .meta-row .tagline{font-size:11px;color:var(--ink-dim);letter-spacing:0.04em}
+
+  .section-h{
+    font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--accent);
+    margin:28px 0 12px;display:flex;align-items:center;gap:10px;
+  }
+  .section-h::before{content:"";display:block;width:18px;height:1px;background:var(--accent)}
+  .statement{font-size:14px;line-height:1.7;color:var(--ink)}
+  .statement p{margin:0 0 14px}
+  .statement code{background:var(--bg-2);padding:1px 6px;border:1px solid var(--rule);color:var(--accent);font-size:12.5px}
+  .example{
+    background:var(--bg-2);border:1px solid var(--rule);padding:14px 16px;margin:10px 0;
+    font-size:12.5px;
+  }
+  .example .lbl{color:var(--ink-faint);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px}
+  .example pre{margin:0;white-space:pre-wrap;color:var(--ink)}
+  .hint-list{list-style:none;padding:0;margin:0}
+  .hint-list li{padding:6px 0;padding-left:18px;position:relative;color:var(--ink-dim);font-size:13px}
+  .hint-list li::before{content:"›";position:absolute;left:0;color:var(--accent)}
+
+  /* solution */
+  .sol-tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-bottom:14px}
+  .sol-tab{
+    background:transparent;border:0;border-bottom:2px solid transparent;
+    color:var(--ink-dim);font-family:inherit;font-size:11px;letter-spacing:0.1em;
+    text-transform:uppercase;padding:8px 14px 10px;cursor:pointer;
+  }
+  .sol-tab.active{color:var(--ink);border-bottom-color:var(--accent)}
+  .sol-tab:hover{color:var(--ink)}
+  .sol-body{display:none}
+  .sol-body.active{display:block}
+  .sol-meta{font-size:11px;color:var(--ink-dim);margin-bottom:8px;display:flex;gap:18px;align-items:center}
+  .sol-meta b{color:var(--ink);font-weight:500}
+
+  .reveal-gate{
+    background:var(--bg-2);border:1px dashed var(--rule);padding:18px;text-align:center;
+    color:var(--ink-dim);font-size:12px;
+  }
+  .reveal-gate button{
+    margin-top:10px;background:transparent;border:1px solid var(--ink-dim);color:var(--ink);
+    font-family:inherit;padding:7px 16px;font-size:11px;letter-spacing:0.1em;
+    text-transform:uppercase;cursor:pointer;transition:all 0.15s;
+  }
+  .reveal-gate button:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  pre.code{
+    background:var(--bg-2);border:1px solid var(--rule);padding:14px 16px;
+    overflow-x:auto;font-size:12.5px;line-height:1.6;margin:0;
+    color:var(--ink);
+  }
+  .tok-kw{color:#ff7eb6}
+  .tok-str{color:#c8ff4c}
+  .tok-num{color:#ffb74d}
+  .tok-com{color:var(--ink-faint);font-style:italic}
+  .tok-fn{color:#7ec5ff}
+  .tok-self{color:#ff9e64}
+
+  /* ===== Right panel: editor + terminal ===== */
+  .right{display:flex;flex-direction:column;padding:0;overflow:hidden}
+  .editor-wrap{flex:1 1 60%;display:flex;flex-direction:column;min-height:0}
+  .editor-bar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 18px;border-bottom:1px solid var(--rule);background:var(--bg-2);
+    font-size:11px;color:var(--ink-dim);
+  }
+  .editor-bar .lbl{letter-spacing:0.15em;text-transform:uppercase}
+  .editor-bar .actions{display:flex;gap:8px}
+  .btn{
+    font-family:inherit;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+    background:transparent;border:1px solid var(--rule);color:var(--ink);
+    padding:6px 14px;cursor:pointer;transition:all 0.15s;
+  }
+  .btn:hover{border-color:var(--ink-dim)}
+  .btn-primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+  .btn-primary:hover{background:#d8ff70;border-color:#d8ff70}
+  .btn:disabled{opacity:0.4;cursor:not-allowed}
+
+  .editor{
+    flex:1;position:relative;background:#0a0b09;min-height:280px;
+  }
+  textarea#code{
+    width:100%;height:100%;background:transparent;color:var(--ink);
+    border:0;outline:0;resize:none;padding:18px 20px;
+    font-family:inherit;font-size:13px;line-height:1.65;
+    caret-color:var(--accent);tab-size:4;
+  }
+
+  .terminal-wrap{flex:0 0 40%;border-top:1px solid var(--rule);background:var(--bg-2);display:flex;flex-direction:column;min-height:200px}
+  .term-bar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:9px 18px;border-bottom:1px solid var(--rule);
+    font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-dim);
+  }
+  .term-bar .status{display:flex;align-items:center;gap:8px}
+  .term-bar .status .indi{width:6px;height:6px;border-radius:50%;background:var(--ink-faint)}
+  .term-bar .status.pass .indi{background:var(--easy);box-shadow:0 0 8px var(--easy)}
+  .term-bar .status.fail .indi{background:var(--red);box-shadow:0 0 8px var(--red)}
+  .term-bar .status.run .indi{background:var(--amber);animation:pulse 0.8s infinite}
+
+  .terminal{
+    flex:1;overflow-y:auto;padding:14px 18px;
+    font-size:12.5px;line-height:1.65;color:var(--ink);
+    background:var(--bg-2);
+  }
+  .terminal::-webkit-scrollbar{width:6px}
+  .terminal::-webkit-scrollbar-thumb{background:var(--rule)}
+  .term-line{white-space:pre-wrap;word-break:break-word}
+  .term-line.ok{color:var(--easy)}
+  .term-line.ko{color:var(--red)}
+  .term-line.dim{color:var(--ink-dim)}
+  .term-line.head{color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;font-size:11px;margin-top:8px}
+  .term-line.sum{margin-top:10px;padding-top:8px;border-top:1px solid var(--rule)}
+  .test-row{display:grid;grid-template-columns:18px 1fr;gap:8px;padding:2px 0}
+  .test-row .ic{font-weight:700}
+  .test-row.pass .ic{color:var(--easy)}
+  .test-row.fail .ic{color:var(--red)}
+  .test-row .det{color:var(--ink-dim);font-size:11.5px;margin-top:2px}
+  .test-row .det b{color:var(--ink);font-weight:500}
+
+  .empty{padding:60px 40px;text-align:center;color:var(--ink-dim)}
+  .empty .big{font-family:'Fraunces',serif;font-style:italic;font-size:32px;color:var(--ink);font-weight:300;margin-bottom:8px}
+
+  /* ===== MOBILE ===== */
+  .hamburger{
+    display:none;background:transparent;border:1px solid var(--rule);
+    color:var(--ink);padding:7px 11px;cursor:pointer;font-size:15px;
+    line-height:1;font-family:inherit;align-items:center;gap:6px;
+    transition:border-color 0.15s;min-width:44px;min-height:44px;justify-content:center;
+  }
+  .hamburger:hover{border-color:var(--ink-dim)}
+
+  .sidebar-backdrop{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,0.65);z-index:199;
+    backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+  }
+  .sidebar-backdrop.visible{display:block}
+
+  .mobile-tabs{
+    display:none;border-bottom:1px solid var(--rule);
+    background:var(--bg-2);flex-shrink:0;
+  }
+  .mobile-tab-btn{
+    flex:1;background:transparent;border:0;
+    border-bottom:2px solid transparent;
+    color:var(--ink-dim);font-family:inherit;
+    font-size:10px;letter-spacing:0.15em;text-transform:uppercase;
+    padding:12px 8px;cursor:pointer;transition:all 0.15s;min-height:44px;
+  }
+  .mobile-tab-btn.active{color:var(--ink);border-bottom-color:var(--accent)}
+  .mobile-tab-btn .tab-icon{font-size:14px;display:block;margin-bottom:2px}
+
+  @media(max-width:768px){
+    .mobile-cta{display:flex !important;justify-content:center}
+
+    /* layout */
+    .shell{grid-template-columns:1fr}
+
+    /* sidebar → drawer */
+    aside{
+      position:fixed;top:0;left:0;bottom:0;
+      width:82vw;max-width:300px;
+      z-index:200;
+      transform:translateX(-100%);
+      transition:transform 0.26s cubic-bezier(0.4,0,0.2,1);
+      height:100%;height:100dvh;
+      padding-top:max(env(safe-area-inset-top,0px), 0px);
+    }
+    aside.open{transform:translateX(0)}
+
+    /* hamburger visible */
+    .hamburger{display:flex}
+
+    /* topbar */
+    .topbar{padding:0 12px;height:48px;flex-shrink:0}
+    .topbar #topRight{display:none}
+    #topStatus{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+
+    /* mobile tabs */
+    .mobile-tabs{display:flex}
+
+    /* main layout */
+    main{display:flex;flex-direction:column;height:100dvh}
+    .content{
+      grid-template-columns:1fr;
+      flex:1;
+      height:auto;
+      min-height:0;
+      overflow:hidden;
+    }
+
+    /* panneau énoncé */
+    .panel.left{
+      padding:18px 16px 24px;
+      border-right:0;
+      height:100%;
+      overflow-y:auto;
+    }
+
+    /* panneau code + terminal */
+    .right{
+      height:100%;
+    }
+
+    /* onglet actif : cache l'autre panneau */
+    .content.tab-code .panel.left{display:none}
+    .content.tab-enonce .right{display:none}
+
+    /* editor */
+    .editor{min-height:200px}
+    textarea#code{
+      font-size:13px;
+      padding:14px 12px;
+      /* évite le zoom auto iOS sur focus */
+      font-size:max(16px, 13px);
+    }
+
+    /* terminal */
+    .terminal-wrap{min-height:160px;flex:0 0 42%}
+    .terminal{font-size:11.5px;padding:10px 12px}
+
+    /* typography */
+    h2.title{font-size:26px}
+    .panel{padding:18px 16px}
+
+    /* touch targets */
+    .btn{padding:10px 14px;min-height:44px;font-size:12px}
+    .btn-primary{min-height:44px}
+    .chip{padding:8px 12px;min-height:38px;font-size:10px}
+    .ex-item{padding:12px 18px;min-height:44px}
+
+    /* editor bar */
+    .editor-bar{padding:8px 12px}
+    .editor-bar .lbl{display:none}
+    .editor-bar .actions{gap:6px}
+
+    /* code blocks */
+    pre.code{font-size:11.5px}
+
+    /* exemples */
+    .example{padding:10px 12px}
+    .meta-row{flex-wrap:wrap;gap:8px}
+    .meta-row .tagline{font-size:10px;word-break:break-all}
+  }
+
+  /* très petit écran (iPhone SE, etc.) */
+  @media(max-width:380px){
+    h2.title{font-size:22px}
+    .panel{padding:14px 12px}
+    textarea#code{padding:10px}
+    aside{width:90vw}
+  }
+
+  /* safe area iPhone (encoche / Dynamic Island) */
+  @supports(padding-top: env(safe-area-inset-top)){
+    @media(max-width:768px){
+      .topbar{padding-top:max(10px, env(safe-area-inset-top))}
+      .topbar{height:calc(48px + env(safe-area-inset-top))}
+    }
+  }
+</style>
+</head>
+<body>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<div class="shell">
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="tag" style="display:flex;align-items:center;gap:6px">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span>Charlene7508</span>
+      </div>
+      <h1>train<span class="acc">.</span><i>ing</i></h1>
+      <div class="sub">entraînement exams 42</div>
+    </div>
+    <div class="filter-bar" id="filters">
+      <button class="chip active" data-f="all">tous</button>
+      <button class="chip" data-f="easy">facile</button>
+      <button class="chip" data-f="medium">moyen</button>
+      <button class="chip" data-f="hard">difficile</button>
+    </div>
+    <div class="ex-list" id="exList"></div>
+  </aside>
+
+  <main>
+    <div class="topbar" id="topbar">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <button class="hamburger" id="hamburgerBtn" aria-label="Menu exercices">☰</button>
+        <div style="display:flex;align-items:center;min-width:0"><span class="dot"></span><span id="topStatus">chargement de pyodide…</span></div>
+      </div>
+      <div id="topRight">exam42</div>
+    </div>
+    <div class="mobile-tabs" id="mobileTabs">
+      <button class="mobile-tab-btn active" data-tab="enonce">
+        <span class="tab-icon">📋</span>Énoncé
+      </button>
+      <button class="mobile-tab-btn" data-tab="code">
+        <span class="tab-icon">⌨️</span>Code
+      </button>
+    </div>
+    <div class="content tab-enonce" id="content">
+      <div class="empty">
+        <div class="big">choisis un exercice.</div>
+        <div>← sélectionne-en un dans la barre latérale pour commencer</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ========================================================================
+   EXERCISES — exam42 · rank03 & rank04
+   ======================================================================== */
+const EXERCISES = [
+  // ============================================================
+  //  42exam.net · rank03 officiel (9 sujets vus sur le site)
+  // ============================================================
+  {
+    id:"py_number_base_converter", group:"42exam.net · rank03", title:"#01 · py_number_base_converter", diff:"medium",
+    statement:`Écris une fonction qui convertit un nombre d'une base vers une autre. Prends en charge les bases de 2 à 36 inclus, avec les chiffres 0-9 et les lettres A-Z pour les valeurs 10-35. Renvoie <code>"ERROR"</code> pour les entrées invalides (base hors limites, chiffres incompatibles avec la base).`,
+    examples:[
+      {in:'number_base_converter("1010", 2, 10)', out:'"10"'},
+      {in:'number_base_converter("FF", 16, 10)', out:'"255"'},
+      {in:'number_base_converter("255", 10, 16)', out:'"FF"'},
+      {in:'number_base_converter("123", 10, 2)', out:'"1111011"'},
+      {in:'number_base_converter("Z", 36, 10)', out:'"35"'},
+      {in:'number_base_converter("123", 1, 10)', out:'"ERROR"'},
+      {in:'number_base_converter("G", 16, 10)', out:'"ERROR"'},
+    ],
+    hints:["Conversion en deux étapes : d'abord en entier intermédiaire, puis dans la base cible.","Construis une chaîne 'digits' = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' pour mapper caractère ↔ valeur.","Pour la conversion vers la base cible, divise répétitivement par to_base et accumule les restes."],
+    sig:"def number_base_converter(number: str, from_base: int, to_base: int) -> str:",
+    starter:`def number_base_converter(number: str, from_base: int, to_base: int) -> str:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["1010",2,10], out:"10"},
+      {args:["FF",16,10], out:"255"},
+      {args:["255",10,16], out:"FF"},
+      {args:["123",10,2], out:"1111011"},
+      {args:["Z",36,10], out:"35"},
+      {args:["35",10,36], out:"Z"},
+      {args:["123",1,10], out:"ERROR"},
+      {args:["G",16,10], out:"ERROR"},
+      {args:["0",10,2], out:"0"},
+      {args:["123",10,37], out:"ERROR"},
+      {args:["1010",2,16], out:"A"},
+    ],
+    solutions:[
+      {name:"Via entier intermédiaire", time:"O(n)", space:"O(n)", code:`def number_base_converter(number, from_base, to_base):
+    if not (2 <= from_base <= 36) or not (2 <= to_base <= 36):
+        return "ERROR"
+    if not number:
+        return "ERROR"
+    digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    val = 0
+    for c in number.upper():
+        if c not in digits:
+            return "ERROR"
+        d = digits.index(c)
+        if d >= from_base:
+            return "ERROR"
+        val = val * from_base + d
+    if val == 0:
+        return "0"
+    result = ""
+    while val > 0:
+        result = digits[val % to_base] + result
+        val //= to_base
+    return result`},
+    ]
+  },
+  {
+    id:"py_mirror_matrix", group:"42exam.net · rank03", title:"#02 · py_mirror_matrix", diff:"easy",
+    statement:`Écris une fonction qui miroite une matrice 2D horizontalement en inversant chaque ligne.<br><br>La fonction doit :<br>• Prendre une liste 2D (matrice) d'entiers en entrée<br>• Retourner une nouvelle liste 2D où chaque ligne est inversée horizontalement<br>• Gérer des matrices de toute taille (carrées ou rectangulaires)<br>• Conserver l'ordre d'origine des lignes<br>• Ne pas modifier la matrice d'origine`,
+    examples:[
+      {in:"mirror_matrix([[1, 2, 3], [4, 5, 6]])", out:"[[3, 2, 1], [6, 5, 4]]"},
+      {in:"mirror_matrix([[1, 2], [3, 4], [5, 6]])", out:"[[2, 1], [4, 3], [6, 5]]"},
+      {in:"mirror_matrix([[7]])", out:"[[7]]"},
+      {in:"mirror_matrix([[1, 2, 3, 4]])", out:"[[4, 3, 2, 1]]"},
+    ],
+    hints:["row[::-1] inverse une ligne en une expression.","Une compréhension de liste fait le travail en une ligne.","Attention : ne pas modifier l'original — retourner une nouvelle liste."],
+    sig:"def mirror_matrix(matrix: list[list[int]]) -> list[list[int]]:",
+    starter:`def mirror_matrix(matrix: list[list[int]]) -> list[list[int]]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[[1,2,3],[4,5,6]]], out:[[3,2,1],[6,5,4]]},
+      {args:[[[1,2],[3,4],[5,6]]], out:[[2,1],[4,3],[6,5]]},
+      {args:[[[7]]], out:[[7]]},
+      {args:[[[1,2,3,4]]], out:[[4,3,2,1]]},
+      {args:[[[-1,-2],[-3,-4]]], out:[[-2,-1],[-4,-3]]},
+      {args:[[]], out:[]},
+      {args:[[[1,2,3],[4,5,6],[7,8,9]]], out:[[3,2,1],[6,5,4],[9,8,7]]},
+    ],
+    solutions:[
+      {name:"Compréhension + slicing", time:"O(n·m)", space:"O(n·m)", code:`def mirror_matrix(matrix):
+    return [row[::-1] for row in matrix]`},
+      {name:"Reversed manuel", time:"O(n·m)", space:"O(n·m)", code:`def mirror_matrix(matrix):
+    result = []
+    for row in matrix:
+        new_row = []
+        for i in range(len(row) - 1, -1, -1):
+            new_row.append(row[i])
+        result.append(new_row)
+    return result`},
+    ]
+  },
+  {
+    id:"py_bracket_validator", group:"42exam.net · rank03", title:"#03 · py_bracket_validator", diff:"medium",
+    statement:`Écris une fonction qui vérifie si les parenthèses d'une chaîne sont correctement appariées et imbriquées. Prends en charge trois types : <code>()</code>, <code>[]</code>, <code>{}</code>.<br><br>La fonction doit :<br>• Retourner <code>True</code> si toutes les parenthèses sont correctement appariées<br>• Retourner <code>True</code> pour les chaînes sans aucune parenthèse<br>• Retourner <code>False</code> si elles ne correspondent pas ou sont mal imbriquées<br>• Ignorer les caractères qui ne sont pas des parenthèses`,
+    examples:[
+      {in:'bracket_validator("()")', out:"True"},
+      {in:'bracket_validator("()[]{}")', out:"True"},
+      {in:'bracket_validator("(]")', out:"False"},
+      {in:'bracket_validator("([)]")', out:"False"},
+      {in:'bracket_validator("{[]}")', out:"True"},
+      {in:'bracket_validator("hello(world)[test]{code}")', out:"True"},
+      {in:'bracket_validator("((()))")', out:"True"},
+    ],
+    hints:["Pile (stack) : empile les ouvrantes, dépile et compare aux fermantes.","Dictionnaire {fermante: ouvrante} pour vérifier rapidement la correspondance.","À la fin, la pile doit être vide. N'oublie pas d'ignorer les caractères qui ne sont pas des parenthèses."],
+    sig:"def bracket_validator(s: str) -> bool:",
+    starter:`def bracket_validator(s: str) -> bool:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["()"], out:true},
+      {args:["()[]{}"], out:true},
+      {args:["(]"], out:false},
+      {args:["([)]"], out:false},
+      {args:["{[]}"], out:true},
+      {args:["hello(world)[test]{code}"], out:true},
+      {args:["((()))"], out:true},
+      {args:[""], out:true},
+      {args:["abc"], out:true},
+      {args:["("], out:false},
+      {args:[")"], out:false},
+      {args:["({[]})"], out:true},
+      {args:["({[}])"], out:false},
+    ],
+    solutions:[
+      {name:"Pile + dictionnaire", time:"O(n)", space:"O(n)", code:`def bracket_validator(s):
+    pairs = {")": "(", "]": "[", "}": "{"}
+    opens = set("([{")
+    stack = []
+    for c in s:
+        if c in opens:
+            stack.append(c)
+        elif c in pairs:
+            if not stack or stack[-1] != pairs[c]:
+                return False
+            stack.pop()
+    return not stack`},
+    ]
+  },
+  {
+    id:"py_echo_validator", group:"42exam.net · rank03", title:"#04 · py_echo_validator", diff:"easy",
+    statement:`Écris une fonction qui vérifie si une chaîne est un palindrome, en ignorant espaces et casse, et en ne considérant que les caractères alphabétiques pour la comparaison.<br><br>Attention : une chaîne vide ou sans caractère alphabétique doit retourner <code>False</code>.`,
+    examples:[
+      {in:'echo_validator("racecar")', out:"True"},
+      {in:'echo_validator("A man a plan a canal Panama")', out:"True"},
+      {in:'echo_validator("race a car")', out:"False"},
+      {in:'echo_validator("Was it a car or a cat I saw")', out:"True"},
+      {in:'echo_validator("hello")', out:"False"},
+      {in:'echo_validator("Madam Im Adam")', out:"True"},
+      {in:'echo_validator("")', out:"False"},
+    ],
+    hints:["str.isalpha() filtre les caractères alphabétiques (sans les chiffres).","Filtre + lower + compare avec l'inverse [::-1].","Cas particulier : si la chaîne filtrée est vide, retourne False."],
+    sig:"def echo_validator(text: str) -> bool:",
+    starter:`def echo_validator(text: str) -> bool:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["racecar"], out:true},
+      {args:["A man a plan a canal Panama"], out:true},
+      {args:["race a car"], out:false},
+      {args:["Was it a car or a cat I saw"], out:true},
+      {args:["hello"], out:false},
+      {args:["Madam Im Adam"], out:true},
+      {args:[""], out:false},
+      {args:["a"], out:true},
+      {args:["ab"], out:false},
+      {args:["12321"], out:false},
+      {args:["No lemon, no melon"], out:true},
+    ],
+    solutions:[
+      {name:"Filtre + comparaison inverse", time:"O(n)", space:"O(n)", code:`def echo_validator(text):
+    filtered = [c.lower() for c in text if c.isalpha()]
+    if not filtered:
+        return False
+    return filtered == filtered[::-1]`},
+      {name:"Deux pointeurs", time:"O(n)", space:"O(1)", code:`def echo_validator(text):
+    left, right = 0, len(text) - 1
+    has_alpha = False
+    while left < right:
+        while left < right and not text[left].isalpha():
+            left += 1
+        while left < right and not text[right].isalpha():
+            right -= 1
+        if text[left].isalpha():
+            has_alpha = True
+        if text[left].lower() != text[right].lower():
+            return False
+        left += 1
+        right -= 1
+    if not has_alpha and (left >= len(text) or not text[left].isalpha()):
+        return False
+    return True`},
+    ]
+  },
+  {
+    id:"py_string_permutation_checker", group:"42exam.net · rank03", title:"#05 · py_string_permutation_checker", diff:"hard",
+    statement:`Écris une fonction qui détermine si deux chaînes sont des permutations l'une de l'autre. Deux chaînes sont des permutations si elles contiennent exactement les mêmes caractères avec les mêmes fréquences.<br><br>La fonction doit :<br>• Vérifier que les deux chaînes contiennent exactement les mêmes caractères<br>• Compter les fréquences (sensible à la casse)<br>• Retourner <code>True</code> si ce sont des permutations, sinon <code>False</code><br>• Deux chaînes vides sont des permutations<br>• Traiter espaces et ponctuation comme des caractères normaux`,
+    examples:[
+      {in:'string_permutation_checker("abc", "bca")', out:"True"},
+      {in:'string_permutation_checker("abc", "def")', out:"False"},
+      {in:'string_permutation_checker("listen", "silent")', out:"True"},
+      {in:'string_permutation_checker("hello", "bello")', out:"False"},
+      {in:'string_permutation_checker("", "")', out:"True"},
+      {in:'string_permutation_checker("a", "")', out:"False"},
+      {in:'string_permutation_checker("Abc", "abc")', out:"False"},
+      {in:'string_permutation_checker("a gentleman", "elegant man")', out:"True"},
+    ],
+    hints:["Si les longueurs diffèrent, ce ne peut pas être une permutation.","Compte les fréquences de chaque caractère dans chaque chaîne.","collections.Counter compare les fréquences en une ligne — sensible à la casse par défaut."],
+    sig:"def string_permutation_checker(s1: str, s2: str) -> bool:",
+    starter:`def string_permutation_checker(s1: str, s2: str) -> bool:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["abc","bca"], out:true},
+      {args:["abc","def"], out:false},
+      {args:["listen","silent"], out:true},
+      {args:["hello","bello"], out:false},
+      {args:["",""], out:true},
+      {args:["a",""], out:false},
+      {args:["Abc","abc"], out:false},
+      {args:["a gentleman","elegant man"], out:true},
+      {args:["aab","bba"], out:false},
+      {args:["xyz","zyx"], out:true},
+      {args:["Hello","hello"], out:false},
+    ],
+    solutions:[
+      {name:"Counter (une ligne)", time:"O(n)", space:"O(n)", code:`from collections import Counter
+
+def string_permutation_checker(s1, s2):
+    return Counter(s1) == Counter(s2)`},
+      {name:"Tri", time:"O(n log n)", space:"O(n)", code:`def string_permutation_checker(s1, s2):
+    return sorted(s1) == sorted(s2)`},
+      {name:"Dict manuel", time:"O(n)", space:"O(n)", code:`def string_permutation_checker(s1, s2):
+    if len(s1) != len(s2):
+        return False
+    freq = {}
+    for c in s1:
+        freq[c] = freq.get(c, 0) + 1
+    for c in s2:
+        if c not in freq:
+            return False
+        freq[c] -= 1
+        if freq[c] < 0:
+            return False
+    return True`},
+    ]
+  },
+  {
+    id:"py_whisper_cipher", group:"42exam.net · rank03", title:"#06 · py_whisper_cipher", diff:"easy",
+    statement:`Écris une fonction qui réalise un chiffrement simple (César) en décalant les lettres d'une chaîne d'un montant donné. Les caractères non alphabétiques restent inchangés. La casse est préservée.`,
+    examples:[
+      {in:'whisper_cipher("hello", 3)', out:'"khoor"'},
+      {in:'whisper_cipher("Hello World!", 1)', out:'"Ifmmp Xpsme!"'},
+      {in:'whisper_cipher("xyz", 3)', out:'"abc"'},
+      {in:'whisper_cipher("ABC123def", 5)', out:'"FGH123ijk"'},
+      {in:'whisper_cipher("", 10)', out:'""'},
+    ],
+    hints:["Utilise ord() et chr() pour manipuler les codes ASCII.","Pour les majuscules : (ord(c) - ord('A') + shift) % 26 + ord('A').","Pareil pour les minuscules avec 'a'. Les autres caractères restent inchangés."],
+    sig:"def whisper_cipher(text: str, shift: int) -> str:",
+    starter:`def whisper_cipher(text: str, shift: int) -> str:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["hello",3], out:"khoor"},
+      {args:["Hello World!",1], out:"Ifmmp Xpsme!"},
+      {args:["xyz",3], out:"abc"},
+      {args:["ABC123def",5], out:"FGH123ijk"},
+      {args:["",10], out:""},
+      {args:["abc",0], out:"abc"},
+      {args:["abc",26], out:"abc"},
+      {args:["z",1], out:"a"},
+      {args:["Z",1], out:"A"},
+      {args:["Python3.9!",13], out:"Clguba3.9!"},
+    ],
+    solutions:[
+      {name:"ord/chr avec modulo 26", time:"O(n)", space:"O(n)", code:`def whisper_cipher(text, shift):
+    result = ""
+    for c in text:
+        if c.isupper():
+            result += chr((ord(c) - ord("A") + shift) % 26 + ord("A"))
+        elif c.islower():
+            result += chr((ord(c) - ord("a") + shift) % 26 + ord("a"))
+        else:
+            result += c
+    return result`},
+    ]
+  },
+  {
+    id:"py_cryptic_sorter", group:"42exam.net · rank03", title:"#07 · py_cryptic_sorter", diff:"hard",
+    statement:`Écris une fonction qui trie une liste de chaînes avec une priorité à trois niveaux :<br>1. <b>Tri principal</b> : par longueur (croissant)<br>2. <b>Tri secondaire</b> : lexicographique insensible à la casse (croissant)<br>3. <b>Tri tertiaire</b> : par nombre de voyelles (croissant, si longueur et ordre lexicographique sont égaux)<br><br>La fonction doit gérer les chaînes vides, les listes vides, les casses mixtes et les caractères spéciaux (ignorés pour le compte des voyelles).`,
+    examples:[
+      {in:'cryptic_sorter(["apple", "cat", "banana", "dog", "elephant"])', out:'["cat", "dog", "apple", "banana", "elephant"]'},
+      {in:'cryptic_sorter(["aaa", "bbb", "AAA", "BBB"])', out:'["aaa", "AAA", "bbb", "BBB"]'},
+      {in:'cryptic_sorter(["hello", "world", "hi", "test"])', out:'["hi", "test", "hello", "world"]'},
+      {in:'cryptic_sorter([])', out:'[]'},
+      {in:'cryptic_sorter([""])', out:'[""]'},
+    ],
+    hints:["Python's sorted() accepte un paramètre key= qui peut être un tuple — les tuples se comparent élément par élément.","key=lambda s: (len(s), s.lower(), nb_voyelles(s)) fait les trois tris en une seule passe.","Les voyelles à compter : 'aeiou' (insensible à la casse, ignorer les autres caractères)."],
+    sig:"def cryptic_sorter(strings: list[str]) -> list[str]:",
+    starter:`def cryptic_sorter(strings: list[str]) -> list[str]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[["apple","cat","banana","dog","elephant"]], out:["cat","dog","apple","banana","elephant"]},
+      {args:[["aaa","bbb","AAA","BBB"]], out:["aaa","AAA","bbb","BBB"]},
+      {args:[["hello","world","hi","test"]], out:["hi","test","hello","world"]},
+      {args:[[]], out:[]},
+      {args:[[""]], out:[""]},
+      {args:[["b","a","c"]], out:["a","b","c"]},
+      {args:[["Zoo","ant","Bar"]], out:["ant","Bar","Zoo"]},
+    ],
+    solutions:[
+      {name:"sorted() avec tuple key", time:"O(n log n)", space:"O(n)", code:`def cryptic_sorter(strings):
+    def vowel_count(s):
+        return sum(1 for c in s.lower() if c in "aeiou")
+    return sorted(strings, key=lambda s: (len(s), s.lower(), vowel_count(s)))`},
+      {name:"Détaillée", time:"O(n log n)", space:"O(n)", code:`def cryptic_sorter(strings):
+    def sort_key(s):
+        length = len(s)
+        alpha = s.lower()
+        vowels = sum(1 for c in s.lower() if c in "aeiou")
+        return (length, alpha, vowels)
+    return sorted(strings, key=sort_key)`},
+    ]
+  },
+  {
+    id:"py_pattern_tracker", group:"42exam.net · rank03", title:"#08 · py_pattern_tracker", diff:"medium",
+    statement:`Écris une fonction qui compte le nombre de paires de chiffres consécutifs valides dans une chaîne. Une paire valide est formée de deux chiffres adjacents dont le second vaut exactement un de plus que le premier. Un 9 suivi d'un 0 n'est PAS une paire valide.`,
+    examples:[
+      {in:'pattern_tracker("123")', out:"2"},
+      {in:'pattern_tracker("12a34")', out:"2"},
+      {in:'pattern_tracker("987654321")', out:"0"},
+      {in:'pattern_tracker("01234567")', out:"7"},
+      {in:'pattern_tracker("abc")', out:"0"},
+      {in:'pattern_tracker("1a2b3c4")', out:"0"},
+      {in:'pattern_tracker("112233")', out:"2"},
+    ],
+    hints:["Itère sur les paires (text[i], text[i+1]) avec range(len(text) - 1).","Vérifie que les DEUX caractères sont des chiffres avec str.isdigit().","Compare int(text[i+1]) == int(text[i]) + 1."],
+    sig:"def pattern_tracker(text: str) -> int:",
+    starter:`def pattern_tracker(text: str) -> int:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["123"], out:2},
+      {args:["12a34"], out:2},
+      {args:["987654321"], out:0},
+      {args:["01234567"], out:7},
+      {args:["abc"], out:0},
+      {args:["1a2b3c4"], out:0},
+      {args:["112233"], out:2},
+      {args:[""], out:0},
+      {args:["1"], out:0},
+      {args:["90"], out:0},
+      {args:["12345"], out:4},
+    ],
+    solutions:[
+      {name:"Boucle sur paires adjacentes", time:"O(n)", space:"O(1)", code:`def pattern_tracker(text):
+    count = 0
+    for i in range(len(text) - 1):
+        a, b = text[i], text[i + 1]
+        if a.isdigit() and b.isdigit() and int(b) == int(a) + 1:
+            count += 1
+    return count`},
+    ]
+  },
+  {
+    id:"py_string_sculptor", group:"42exam.net · rank03", title:"#09 · py_string_sculptor", diff:"medium",
+    statement:`Écris une fonction qui transforme une chaîne en alternant la casse des seuls caractères alphabétiques. Les autres caractères restent inchangés et ne comptent pas pour l'alternance. Le premier caractère alphabétique doit être en minuscule, le second en majuscule, le troisième en minuscule, etc.`,
+    examples:[
+      {in:'string_sculptor("hello")', out:'"hElLo"'},
+      {in:'string_sculptor("Hello World")', out:'"hElLo WoRlD"'},
+      {in:'string_sculptor("aBc123def")', out:'"aBc123DeF"'},
+      {in:'string_sculptor("Python3.9!")', out:'"pYtHoN3.9!"'},
+      {in:'string_sculptor("")', out:'""'},
+    ],
+    hints:["Garde un compteur SÉPARÉ pour les seuls caractères alphabétiques.","Si l'indice alpha est pair → lower(), impair → upper().","Les caractères non alphabétiques sont copiés tels quels sans incrémenter le compteur."],
+    sig:"def string_sculptor(text: str) -> str:",
+    starter:`def string_sculptor(text: str) -> str:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["hello"], out:"hElLo"},
+      {args:["Hello World"], out:"hElLo WoRlD"},
+      {args:["aBc123def"], out:"aBc123DeF"},
+      {args:["Python3.9!"], out:"pYtHoN3.9!"},
+      {args:[""], out:""},
+      {args:["123"], out:"123"},
+      {args:["a"], out:"a"},
+      {args:["ab"], out:"aB"},
+      {args:["a b c"], out:"a B c"},
+    ],
+    solutions:[
+      {name:"Compteur alpha séparé", time:"O(n)", space:"O(n)", code:`def string_sculptor(text):
+    result = ""
+    alpha_idx = 0
+    for c in text:
+        if c.isalpha():
+            if alpha_idx % 2 == 0:
+                result += c.lower()
+            else:
+                result += c.upper()
+            alpha_idx += 1
+        else:
+            result += c
+    return result`},
+    ]
+  },
+  {
+    id:"py_shadow_merge", group:"42exam.net · rank03", title:"#10 · py_shadow_merge", diff:"easy",
+    statement:`Écris une fonction qui fusionne deux listes triées en une seule liste triée. Les deux listes d'entrée sont déjà triées par ordre croissant.`,
+    examples:[
+      {in:"shadow_merge([1, 3, 5], [2, 4, 6])", out:"[1, 2, 3, 4, 5, 6]"},
+      {in:"shadow_merge([1, 2, 3], [4, 5, 6])", out:"[1, 2, 3, 4, 5, 6]"},
+      {in:"shadow_merge([1], [2, 3, 4])", out:"[1, 2, 3, 4]"},
+      {in:"shadow_merge([], [1, 2, 3])", out:"[1, 2, 3]"},
+      {in:"shadow_merge([1, 1, 2], [1, 3, 3])", out:"[1, 1, 1, 2, 3, 3]"},
+    ],
+    hints:["Deux pointeurs i et j, un pour chaque liste.","À chaque tour, ajoute le plus petit et avance le pointeur correspondant.","À la fin, ajoute le reste de la liste qui n'est pas vide (extend ou +=)."],
+    sig:"def shadow_merge(list1: list[int], list2: list[int]) -> list[int]:",
+    starter:`def shadow_merge(list1: list[int], list2: list[int]) -> list[int]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[1,3,5],[2,4,6]], out:[1,2,3,4,5,6]},
+      {args:[[1,2,3],[4,5,6]], out:[1,2,3,4,5,6]},
+      {args:[[1],[2,3,4]], out:[1,2,3,4]},
+      {args:[[],[1,2,3]], out:[1,2,3]},
+      {args:[[1,1,2],[1,3,3]], out:[1,1,1,2,3,3]},
+      {args:[[],[]], out:[]},
+      {args:[[5],[1]], out:[1,5]},
+      {args:[[-3,-1,2],[-2,0,4]], out:[-3,-2,-1,0,2,4]},
+    ],
+    solutions:[
+      {name:"Deux pointeurs", time:"O(n + m)", space:"O(n + m)", code:`def shadow_merge(list1, list2):
+    result = []
+    i = j = 0
+    while i < len(list1) and j < len(list2):
+        if list1[i] <= list2[j]:
+            result.append(list1[i])
+            i += 1
+        else:
+            result.append(list2[j])
+            j += 1
+    result.extend(list1[i:])
+    result.extend(list2[j:])
+    return result`},
+      {name:"Concat + tri (plus simple mais moins efficace)", time:"O((n+m) log(n+m))", space:"O(n+m)", code:`def shadow_merge(list1, list2):
+    return sorted(list1 + list2)`},
+    ]
+  },
+  {
+    id:"py_twist_sequence", group:"42exam.net · rank03", title:"#11 · py_twist_sequence", diff:"medium",
+    statement:`Écris une fonction qui effectue une rotation d'un tableau vers la droite de k positions. Une rotation à droite de k signifie que les k derniers éléments passent en tête.`,
+    examples:[
+      {in:"twist_sequence([1, 2, 3, 4, 5], 2)", out:"[4, 5, 1, 2, 3]"},
+      {in:"twist_sequence([1, 2, 3], 1)", out:"[3, 1, 2]"},
+      {in:"twist_sequence([1, 2, 3, 4], 0)", out:"[1, 2, 3, 4]"},
+      {in:"twist_sequence([1, 2, 3], 5)", out:"[2, 3, 1]"},
+      {in:"twist_sequence([], 3)", out:"[]"},
+    ],
+    hints:["Si k est plus grand que la longueur, utilise k % len(arr).","Slicing : arr[-k:] + arr[:-k] fait toute la rotation en une ligne.","Cas limites : liste vide, k == 0, k multiple de la longueur."],
+    sig:"def twist_sequence(arr: list[int], k: int) -> list[int]:",
+    starter:`def twist_sequence(arr: list[int], k: int) -> list[int]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[1,2,3,4,5],2], out:[4,5,1,2,3]},
+      {args:[[1,2,3],1], out:[3,1,2]},
+      {args:[[1,2,3,4],0], out:[1,2,3,4]},
+      {args:[[1,2,3],5], out:[2,3,1]},
+      {args:[[],3], out:[]},
+      {args:[[1],100], out:[1]},
+      {args:[[1,2],2], out:[1,2]},
+      {args:[[1,2,3,4,5],5], out:[1,2,3,4,5]},
+      {args:[[1,2,3,4,5,6,7],3], out:[5,6,7,1,2,3,4]},
+    ],
+    solutions:[
+      {name:"Slicing avec modulo", time:"O(n)", space:"O(n)", code:`def twist_sequence(arr, k):
+    if not arr:
+        return []
+    k = k % len(arr)
+    if k == 0:
+        return list(arr)
+    return arr[-k:] + arr[:-k]`},
+      {name:"Construction manuelle", time:"O(n)", space:"O(n)", code:`def twist_sequence(arr, k):
+    n = len(arr)
+    if n == 0:
+        return []
+    k = k % n
+    result = [0] * n
+    for i in range(n):
+        result[(i + k) % n] = arr[i]
+    return result`},
+    ]
+  },
+  {
+    id:"py_hidenp", group:"42exam.net · rank03", title:"#12 · py_hidenp", diff:"hard",
+    statement:`Écris une fonction qui vérifie si la chaîne <code>small</code> est une sous-suite (subsequence) de <code>big</code>. Une sous-suite signifie que tous les caractères de <code>small</code> apparaissent dans <code>big</code> dans le même ordre, mais pas nécessairement de manière consécutive. La fonction est sensible à la casse.`,
+    examples:[
+      {in:'hidenp("abc", "a1b2c3")', out:"True"},
+      {in:'hidenp("ace", "abcde")', out:"True"},
+      {in:'hidenp("aec", "abcde")', out:"False"},
+      {in:'hidenp("", "abc")', out:"True"},
+      {in:'hidenp("abc", "ab")', out:"False"},
+      {in:'hidenp("aaaa", "aaa")', out:"False"},
+      {in:'hidenp("sing","subsequence testing")', out:"True"},
+    ],
+    hints:["Deux pointeurs : un sur small, un sur big, qui avancent chacun à leur rythme.","Le pointeur sur big avance toujours ; celui sur small n'avance que si les caractères correspondent.","À la fin, small est une sous-suite si son pointeur a atteint la fin de small."],
+    sig:"def hidenp(small: str, big: str) -> bool:",
+    starter:`def hidenp(small: str, big: str) -> bool:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["abc","a1b2c3"], out:true},
+      {args:["ace","abcde"], out:true},
+      {args:["aec","abcde"], out:false},
+      {args:["","abc"], out:true},
+      {args:["abc","ab"], out:false},
+      {args:["aaaa","aaa"], out:false},
+      {args:["sing","subsequence testing"], out:true},
+      {args:["","" ], out:true},
+      {args:["abc","abc"], out:true},
+      {args:["Abc","abc"], out:false},
+    ],
+    solutions:[
+      {name:"Deux pointeurs", time:"O(n)", space:"O(1)", code:`def hidenp(small, big):
+    i = 0
+    for c in big:
+        if i < len(small) and small[i] == c:
+            i += 1
+    return i == len(small)`},
+      {name:"Itérateur + all()", time:"O(n)", space:"O(1)", code:`def hidenp(small, big):
+    it = iter(big)
+    return all(c in it for c in small)`},
+    ]
+  },
+  {
+    id:"py_inter", group:"42exam.net · rank03", title:"#13 · py_inter", diff:"hard",
+    statement:`Écris une fonction qui renvoie une chaîne contenant les caractères qui apparaissent dans les deux chaînes, sans répétition. Les caractères sont ajoutés dans l'ordre où ils apparaissent dans la première chaîne.`,
+    examples:[
+      {in:'inter("hello", "world")', out:'"lo"'},
+      {in:'inter("banana", "band")', out:'"ban"'},
+      {in:'inter("abcabc", "bc")', out:'"bc"'},
+      {in:'inter("abc", "xyz")', out:'""'},
+      {in:'inter("", "abc")', out:'""'},
+    ],
+    hints:["Mets les caractères de s2 dans un set pour un lookup en O(1).","Parcours s1 dans l'ordre, garde un caractère si présent dans s2 ET pas encore ajouté.","Un deuxième set (ou liste 'déjà vus') évite les répétitions dans le résultat."],
+    sig:"def inter(s1: str, s2: str) -> str:",
+    starter:`def inter(s1: str, s2: str) -> str:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["hello","world"], out:"lo"},
+      {args:["banana","band"], out:"ban"},
+      {args:["abcabc","bc"], out:"bc"},
+      {args:["abc","xyz"], out:""},
+      {args:["","abc"], out:""},
+      {args:["abc",""], out:""},
+      {args:["aabbcc","abc"], out:"abc"},
+      {args:["Hello","hello"], out:"elo"},
+    ],
+    solutions:[
+      {name:"Set + boucle ordonnée", time:"O(n+m)", space:"O(n)", code:`def inter(s1, s2):
+    in_s2 = set(s2)
+    seen = set()
+    result = ""
+    for c in s1:
+        if c in in_s2 and c not in seen:
+            result += c
+            seen.add(c)
+    return result`},
+      {name:"Compréhension + dict.fromkeys", time:"O(n+m)", space:"O(n)", code:`def inter(s1, s2):
+    in_s2 = set(s2)
+    return "".join(dict.fromkeys(c for c in s1 if c in in_s2))`},
+    ]
+  },
+  {
+    id:"py_anagram", group:"42exam.net · rank03", title:"#14 · py_anagram", diff:"hard",
+    statement:`Write a function that checks if two strings are anagrams. They must contain exactly the same letters with the same quantity, ignoring case and spaces.`,
+    examples:[
+      {in:'anagram("Listen", "silent")', out:"True"},
+      {in:'anagram("Triangle", "Integral")', out:"True"},
+      {in:'anagram("Dormitory", "Dirty Room")', out:"True"},
+      {in:'anagram("hello", "world")', out:"False"},
+      {in:'anagram("", "")', out:"True"},
+      {in:'anagram("abc", "abcc")', out:"False"},
+    ],
+    hints:["Ignore la casse (.lower()) et retire les espaces avant de comparer.","Une fois nettoyées, deux chaînes sont anagrammes si Counter(a) == Counter(b).","N'oublie pas de retirer les espaces AVANT de compter, pas après."],
+    sig:"def anagram(s1: str, s2: str) -> bool:",
+    starter:`def anagram(s1: str, s2: str) -> bool:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["Listen","silent"], out:true},
+      {args:["Triangle","Integral"], out:true},
+      {args:["Dormitory","Dirty Room"], out:true},
+      {args:["hello","world"], out:false},
+      {args:["",""], out:true},
+      {args:["abc","abcc"], out:false},
+      {args:["a b c","cab"], out:true},
+      {args:["Astronomer","Moon starer"], out:true},
+    ],
+    solutions:[
+      {name:"Nettoyage + Counter", time:"O(n)", space:"O(n)", code:`from collections import Counter
+
+def anagram(s1, s2):
+    clean1 = s1.lower().replace(" ", "")
+    clean2 = s2.lower().replace(" ", "")
+    return Counter(clean1) == Counter(clean2)`},
+      {name:"Nettoyage + tri", time:"O(n log n)", space:"O(n)", code:`def anagram(s1, s2):
+    clean1 = sorted(s1.lower().replace(" ", ""))
+    clean2 = sorted(s2.lower().replace(" ", ""))
+    return clean1 == clean2`},
+    ]
+  },
+
+  // ============================================================
+  //  42exam.net · rank04 — exam Python Médium (7 sujets)
+  // ============================================================
+  {
+    id:"r4_is_rotation", group:"42exam.net · rank04", title:"#01 · is_rotation", diff:"easy",
+    statement:`Écris une fonction qui prend deux listes en paramètres et détermine si la deuxième liste est une rotation de la première (à gauche ou à droite).<br><br>Une rotation signifie que les éléments sont décalés de manière circulaire. Par exemple, décaler <code>[1, 2, 3]</code> vers la droite d'une position donne <code>[3, 1, 2]</code>.<br><br>• Retourne <code>True</code> si arr2 est une rotation de arr1, <code>False</code> sinon<br>• Des longueurs différentes → jamais une rotation<br>• Deux tableaux vides sont considérés comme des rotations l'un de l'autre`,
+    examples:[
+      {in:"is_rotation([1, 2, 3, 4, 5], [4, 5, 1, 2, 3])", out:"True"},
+      {in:"is_rotation([1, 2, 3, 4, 5], [5, 1, 2, 3, 4])", out:"True"},
+      {in:"is_rotation([1, 2, 3], [3, 2, 1])", out:"False"},
+    ],
+    hints:["Astuce classique : si arr2 est une rotation de arr1, alors arr2 apparaît quelque part dans arr1 + arr1 (la liste doublée).","Sans l'astuce : teste toutes les rotations possibles avec le slicing arr1[k:] + arr1[:k].","N'oublie pas de vérifier d'abord les longueurs."],
+    sig:"def is_rotation(arr1: list, arr2: list) -> bool:",
+    starter:`def is_rotation(arr1: list, arr2: list) -> bool:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[1,2,3,4,5],[4,5,1,2,3]], out:true},
+      {args:[[1,2,3,4,5],[5,1,2,3,4]], out:true},
+      {args:[[1,2,3],[3,2,1]], out:false},
+      {args:[[],[]], out:true},
+      {args:[[1],[1]], out:true},
+      {args:[[1,2],[1,2]], out:true},
+      {args:[[1,2,3],[1,2]], out:false},
+      {args:[[1,2,3],[2,3,1]], out:true},
+      {args:[[1,1,2],[2,1,1]], out:true},
+      {args:[[1,2,3],[1,3,2]], out:false},
+    ],
+    solutions:[
+      {name:"Astuce liste doublée", time:"O(n²)", space:"O(n)", code:`def is_rotation(arr1, arr2):
+    if len(arr1) != len(arr2):
+        return False
+    if not arr1:
+        return True
+    doubled = arr1 + arr1
+    n = len(arr1)
+    for i in range(n):
+        if doubled[i:i + n] == arr2:
+            return True
+    return False`},
+      {name:"Compréhension + any()", time:"O(n²)", space:"O(n)", code:`def is_rotation(arr1, arr2):
+    if len(arr1) != len(arr2):
+        return False
+    if not arr1:
+        return True
+    n = len(arr1)
+    return any(arr1[k:] + arr1[:k] == arr2 for k in range(n))`},
+    ]
+  },
+  {
+    id:"r4_constellation_mapper", group:"42exam.net · rank04", title:"#02 · py_constellation_mapper", diff:"easy",
+    statement:`Implémente la fonction <code>constellation_mapper</code>. Elle doit :<br>• Prendre en paramètre une liste de tuples, chacun composé d'un entier (ligne) et d'un entier (colonne)<br>• Renvoyer une liste de chaînes représentant une grille de taille <code>size</code> × <code>size</code>, composée de caractères <code>.</code> et <code>*</code> en fonction des coordonnées fournies dans <code>stars</code><br>• Ignorer les coordonnées en dehors des limites de la grille<br>• Ignorer les coordonnées en double
+<div style="margin-top:18px;background:#0d0e0c;border:1px solid #26271f;border-radius:6px;padding:16px 20px;">
+<svg width="100%" viewBox="0 0 640 420" style="display:block;font-family:'JetBrains Mono',monospace;">
+<defs>
+<marker id="cmArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#8a8b80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<text x="20" y="24" fill="#c8ff4c" font-size="13" font-weight="600">ENTRÉE</text>
+<text x="20" y="42" fill="#8a8b80" font-size="11">stars = [(0,0), (1,1), (2,2)]  ·  size = 3</text>
+
+<rect x="20" y="60" width="240" height="240" rx="4" fill="none" stroke="#3a3b35" stroke-width="1"/>
+<line x1="20" y1="140" x2="260" y2="140" stroke="#26271f" stroke-width="1"/>
+<line x1="20" y1="220" x2="260" y2="220" stroke="#26271f" stroke-width="1"/>
+<line x1="100" y1="60" x2="100" y2="300" stroke="#26271f" stroke-width="1"/>
+<line x1="180" y1="60" x2="180" y2="300" stroke="#26271f" stroke-width="1"/>
+
+<text x="60" y="102" fill="#8a8b80" font-size="10" text-anchor="middle">col 0</text>
+<text x="140" y="102" fill="#8a8b80" font-size="10" text-anchor="middle">col 1</text>
+<text x="220" y="102" fill="#8a8b80" font-size="10" text-anchor="middle">col 2</text>
+
+<text x="34" y="104" fill="#8a8b80" font-size="10" text-anchor="middle" transform="rotate(-90 34 104)">ligne 0</text>
+<text x="34" y="184" fill="#8a8b80" font-size="10" text-anchor="middle" transform="rotate(-90 34 184)">ligne 1</text>
+<text x="34" y="264" fill="#8a8b80" font-size="10" text-anchor="middle" transform="rotate(-90 34 264)">ligne 2</text>
+
+<circle cx="60" cy="100" r="13" fill="rgba(200,255,76,0.15)" stroke="#c8ff4c" stroke-width="1"/>
+<text x="60" y="100" fill="#c8ff4c" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="central">*</text>
+<circle cx="140" cy="180" r="13" fill="rgba(200,255,76,0.15)" stroke="#c8ff4c" stroke-width="1"/>
+<text x="140" y="180" fill="#c8ff4c" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="central">*</text>
+<circle cx="220" cy="260" r="13" fill="rgba(200,255,76,0.15)" stroke="#c8ff4c" stroke-width="1"/>
+<text x="220" y="260" fill="#c8ff4c" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="central">*</text>
+
+<text x="34" y="118" fill="#3a3b35" font-size="11" text-anchor="middle">.</text>
+<text x="140" y="118" fill="#3a3b35" font-size="11" text-anchor="middle">.</text>
+<text x="220" y="118" fill="#3a3b35" font-size="11" text-anchor="middle">.</text>
+<text x="60" y="198" fill="#3a3b35" font-size="11" text-anchor="middle">.</text>
+<text x="220" y="198" fill="#3a3b35" font-size="11" text-anchor="middle">.</text>
+<text x="60" y="278" fill="#3a3b35" font-size="11" text-anchor="middle">.</text>
+<text x="140" y="278" fill="#3a3b35" font-size="11" text-anchor="middle">.</text>
+
+<line x1="270" y1="180" x2="310" y2="180" stroke="#8a8b80" stroke-width="1.5" marker-end="url(#cmArrow)"/>
+<text x="290" y="166" fill="#8a8b80" font-size="9" text-anchor="middle">for r,c</text>
+
+<text x="330" y="24" fill="#c8ff4c" font-size="13" font-weight="600">SORTIE</text>
+<text x="330" y="42" fill="#8a8b80" font-size="11">une chaîne par ligne</text>
+
+<rect x="330" y="60" width="230" height="110" rx="4" fill="rgba(200,255,76,0.05)" stroke="#c8ff4c" stroke-width="1"/>
+<text x="345" y="84" fill="#e9e6dc" font-size="13" font-weight="600">["*..",</text>
+<text x="365" y="106" fill="#e9e6dc" font-size="13" font-weight="600">".*.",</text>
+<text x="365" y="128" fill="#e9e6dc" font-size="13" font-weight="600">"..*"]</text>
+<text x="345" y="152" fill="#8a8b80" font-size="10">ligne 0 → "*.." · ligne 1 → ".*."</text>
+
+<rect x="330" y="190" width="230" height="105" rx="4" fill="rgba(255,107,91,0.06)" stroke="#ff6b5b" stroke-width="1"/>
+<text x="345" y="212" fill="#ff6b5b" font-size="12" font-weight="600">À ignorer :</text>
+<text x="345" y="233" fill="#8a8b80" font-size="10">(5,5) hors grille → ignoré</text>
+<text x="345" y="252" fill="#8a8b80" font-size="10">(0,0) en double → compté 1 fois</text>
+<text x="345" y="271" fill="#8a8b80" font-size="10">(-1,0) négatif → ignoré</text>
+
+<text x="20" y="335" fill="#8a8b80" font-size="10">⚠ le tuple est (ligne, colonne) — pas (x, y) : le 1er nombre est la ligne (verticale)</text>
+</svg>
+</div>`,
+    examples:[
+      {in:"constellation_mapper([(0, 0), (1, 1), (2, 2)], 3)", out:'["*..", ".*.", "..*"]'},
+      {in:"constellation_mapper([(0, 0), (0, 1), (0, 2), (1, 1), (2, 2)], 3)", out:'["***", ".*.", "..*"]'},
+      {in:"constellation_mapper([(0, 0), (5, 5), (2, 2)], 3)", out:'["*..", "...", "..*"]'},
+    ],
+    hints:["Mets les coordonnées valides dans un set — ça gère les doublons ET rend les lookups O(1).","Une coordonnée (ligne, colonne) est valide si 0 <= ligne < size et 0 <= colonne < size.","Construis chaque ligne avec un join : ''.join('*' if (r, c) in star_set else '.' for c in range(size))."],
+    sig:"def constellation_mapper(stars: list[tuple[int, int]], size: int) -> list[str]:",
+    starter:`def constellation_mapper(stars: list[tuple[int, int]], size: int) -> list[str]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[[0,0],[1,1],[2,2]],3], out:["*..",".*.","..*"]},
+      {args:[[[0,0],[0,1],[0,2],[1,1],[2,2]],3], out:["***",".*.","..*"]},
+      {args:[[[0,0],[5,5],[2,2]],3], out:["*..","...","..*"]},
+      {args:[[[0,0],[5,5]],2], out:["*.",".."]},
+      {args:[[],3], out:["...","...","..."]},
+      {args:[[[0,0],[0,0],[0,0]],2], out:["*.",".."]},
+      {args:[[[1,0]],2], out:["..","*."]},
+      {args:[[[-1,0],[0,-1],[0,0]],2], out:["*.",".."]},
+    ],
+    solutions:[
+      {name:"Set + double compréhension", time:"O(size²)", space:"O(size²)", code:`def constellation_mapper(stars, size):
+    star_set = {(r, c) for r, c in stars
+                if 0 <= r < size and 0 <= c < size}
+    return ["".join("*" if (r, c) in star_set else "."
+                    for c in range(size))
+            for r in range(size)]`},
+      {name:"Grille mutable puis join", time:"O(size²)", space:"O(size²)", code:`def constellation_mapper(stars, size):
+    grid = [["."] * size for _ in range(size)]
+    for r, c in stars:
+        if 0 <= r < size and 0 <= c < size:
+            grid[r][c] = "*"
+    return ["".join(row) for row in grid]`},
+    ]
+  },
+  {
+    id:"r4_common_elements", group:"42exam.net · rank04", title:"#03 · common_elements", diff:"easy",
+    statement:`Renvoie une liste contenant les éléments présents dans <b>chaque</b> sous-liste, sans doublon, dans l'ordre croissant. Si la liste d'entrée est vide, ou si une sous-liste est vide, le résultat est une liste vide. Toutes les sous-listes contiennent des éléments du même type comparable.`,
+    examples:[
+      {in:"common_elements([[1, 2, 3], [2, 3, 4], [3, 4, 5]])", out:"[3]"},
+      {in:"common_elements([[1, 2], [3, 4]])", out:"[]"},
+      {in:"common_elements([])", out:"[]"},
+    ],
+    hints:["C'est une intersection d'ensembles : set.intersection fait exactement ça.","set(a) & set(b) & set(c)... ou set(lists[0]).intersection(*lists[1:]).","N'oublie pas de trier le résultat avec sorted() avant de le retourner."],
+    sig:"def common_elements(lists: list) -> list:",
+    starter:`def common_elements(lists: list) -> list:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[[1,2,3],[2,3,4],[3,4,5]]], out:[3]},
+      {args:[[[1,2],[3,4]]], out:[]},
+      {args:[[]], out:[]},
+      {args:[[[1,2,3]]], out:[1,2,3]},
+      {args:[[[1,2],[],[1]]], out:[]},
+      {args:[[[3,1,2],[2,1,3],[1,2,3]]], out:[1,2,3]},
+      {args:[[[5,5,5],[5],[5,5]]], out:[5]},
+      {args:[[[1,2,3],[2,3],[3,2]]], out:[2,3]},
+    ],
+    solutions:[
+      {name:"Intersection de sets", time:"O(n·m)", space:"O(m)", code:`def common_elements(lists):
+    if not lists or any(not sub for sub in lists):
+        return []
+    result = set(lists[0])
+    for sub in lists[1:]:
+        result &= set(sub)
+    return sorted(result)`},
+      {name:"set.intersection + unpacking", time:"O(n·m)", space:"O(m)", code:`def common_elements(lists):
+    if not lists or any(not sub for sub in lists):
+        return []
+    return sorted(set(lists[0]).intersection(*lists[1:]))`},
+    ]
+  },
+  {
+    id:"r4_merge_sorted_list", group:"42exam.net · rank04", title:"#04 · merge_sorted_list", diff:"medium",
+    statement:`Tu reçois une liste de sous-listes d'entiers triées, dans n'importe quel ordre. Fusionne toutes les sous-listes en une seule liste triée par ordre croissant et renvoie-la.<br><br>Contraintes :<br>• La liste externe peut être vide → renvoyer <code>[]</code><br>• Des sous-listes vides peuvent exister et doivent être ignorées<br>• Les valeurs peuvent se répéter (conserver les doublons)<br>• Chaque sous-liste est déjà triée individuellement`,
+    examples:[
+      {in:"merge_sorted_list([[1, 4, 5], [1, 3, 4], [2, 6]])", out:"[1, 1, 2, 3, 4, 4, 5, 6]"},
+      {in:"merge_sorted_list([[1, 2, 3], [], [0, 4]])", out:"[0, 1, 2, 3, 4]"},
+      {in:"merge_sorted_list([])", out:"[]"},
+      {in:"merge_sorted_list([[], []])", out:"[]"},
+    ],
+    hints:["Version simple : aplatir toutes les sous-listes puis sorted() — O(N log N).","Version optimale : heapq.merge fusionne des itérables déjà triés en O(N log k).","L'aplatissement en compréhension : [x for sub in lists for x in sub]."],
+    sig:"def merge_sorted_list(lists: list[list[int]]) -> list[int]:",
+    starter:`def merge_sorted_list(lists: list[list[int]]) -> list[int]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[[1,4,5],[1,3,4],[2,6]]], out:[1,1,2,3,4,4,5,6]},
+      {args:[[[1,2,3],[],[0,4]]], out:[0,1,2,3,4]},
+      {args:[[]], out:[]},
+      {args:[[[],[]]], out:[]},
+      {args:[[[5]]], out:[5]},
+      {args:[[[1,1],[1,1]]], out:[1,1,1,1]},
+      {args:[[[-3,0],[-5,2],[-1]]], out:[-5,-3,-1,0,2]},
+      {args:[[[1,2,3],[4,5,6],[7,8,9]]], out:[1,2,3,4,5,6,7,8,9]},
+    ],
+    solutions:[
+      {name:"Aplatir + sorted (compréhension)", time:"O(N log N)", space:"O(N)", code:`def merge_sorted_list(lists):
+    return sorted(x for sub in lists for x in sub)`},
+      {name:"heapq.merge (optimal)", time:"O(N log k)", space:"O(N)", code:`import heapq
+
+def merge_sorted_list(lists):
+    return list(heapq.merge(*lists))`},
+      {name:"Fusion manuelle deux à deux", time:"O(N·k)", space:"O(N)", code:`def merge_sorted_list(lists):
+    def merge_two(a, b):
+        result = []
+        i = j = 0
+        while i < len(a) and j < len(b):
+            if a[i] <= b[j]:
+                result.append(a[i])
+                i += 1
+            else:
+                result.append(b[j])
+                j += 1
+        result.extend(a[i:])
+        result.extend(b[j:])
+        return result
+
+    merged = []
+    for sub in lists:
+        merged = merge_two(merged, sub)
+    return merged`},
+    ]
+  },
+  {
+    id:"r4_palindrome_partitioner", group:"42exam.net · rank04", title:"#05 · palindrome_partitioner", diff:"medium",
+    statement:`Étant donné une chaîne de caractères <code>s</code>, trouve le nombre minimal de coupes nécessaires pour la partitionner de manière à ce que chaque sous-chaîne résultante soit un palindrome.<br><br>Une coupe divise la chaîne entre deux caractères. Avec <code>c</code> coupes, la chaîne est divisée en <code>c + 1</code> sous-chaînes.<br><br>Contraintes :<br>• Une chaîne vide ou d'un seul caractère est déjà un palindrome → 0 coupe<br>• Si la chaîne entière est déjà un palindrome → 0 coupe<br>• Dans le pire des cas (tous caractères distincts), le résultat est <code>len(s) - 1</code> coupes`,
+    examples:[
+      {in:'palindrome_partitioner("aab")', out:"1"},
+      {in:'palindrome_partitioner("aba")', out:"0"},
+    ],
+    hints:["Programmation dynamique en deux structures : une grille est_palindrome[i][j] et un tableau coupes[j].","est_palindrome[i][j] est vrai si s[i]==s[j] ET (j-i<=2 OU est_palindrome[i+1][j-1]).","Quand s[i..j] est un palindrome : si i==0 alors coupes[j]=0, sinon coupes[j]=min(coupes[j], coupes[i-1]+1)."],
+    sig:"def palindrome_partitioner(s: str) -> int:",
+    starter:`def palindrome_partitioner(s: str) -> int:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["aab"], out:1},
+      {args:["aba"], out:0},
+      {args:[""], out:0},
+      {args:["a"], out:0},
+      {args:["ab"], out:1},
+      {args:["abc"], out:2},
+      {args:["racecar"], out:0},
+      {args:["aabb"], out:1},
+      {args:["abcba"], out:0},
+      {args:["ababababab"], out:1},
+    ],
+    solutions:[
+      {name:"DP en une passe", time:"O(n²)", space:"O(n²)", code:`def palindrome_partitioner(s):
+    if not s:
+        return 0
+    n = len(s)
+    coupes = list(range(n))
+    est_pal = [[False] * n for _ in range(n)]
+    for j in range(n):
+        for i in range(j + 1):
+            if s[i] == s[j] and (j - i <= 2 or est_pal[i + 1][j - 1]):
+                est_pal[i][j] = True
+                if i == 0:
+                    coupes[j] = 0
+                else:
+                    coupes[j] = min(coupes[j], coupes[i - 1] + 1)
+    return coupes[n - 1]`},
+      {name:"DP deux étapes (plus lisible)", time:"O(n²)", space:"O(n²)", code:`def palindrome_partitioner(s):
+    if not s:
+        return 0
+    n = len(s)
+
+    # Étape 1 : précalculer tous les palindromes
+    est_pal = [[False] * n for _ in range(n)]
+    for i in range(n):
+        est_pal[i][i] = True
+    for i in range(n - 1):
+        est_pal[i][i + 1] = (s[i] == s[i + 1])
+    for length in range(3, n + 1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+            est_pal[i][j] = (s[i] == s[j]) and est_pal[i + 1][j - 1]
+
+    # Étape 2 : DP sur les coupures
+    coupes = list(range(n))
+    for j in range(1, n):
+        if est_pal[0][j]:
+            coupes[j] = 0
+            continue
+        for i in range(1, j + 1):
+            if est_pal[i][j]:
+                coupes[j] = min(coupes[j], coupes[i - 1] + 1)
+    return coupes[n - 1]`},
+    ]
+  },
+  {
+    id:"r4_sliding_window_maximium", group:"42exam.net · rank04", title:"#06 · sliding_window_maximium", diff:"medium",
+    statement:`Étant donné une liste d'entiers <code>nums</code> et un entier <code>k</code>, considère une "fenêtre" de taille <code>k</code> glissant de gauche à droite, une position à la fois.<br><br>Pour chaque position de la fenêtre, trouve la valeur maximale à l'intérieur. Renvoie la liste de toutes ces valeurs maximales, dans l'ordre d'apparition des fenêtres.<br><br>Contraintes :<br>• Si <code>nums</code> est vide ou <code>k <= 0</code>, renvoyer <code>[]</code><br>• Le nombre de fenêtres (et de maximums) est <code>len(nums) - k + 1</code>
+<div style="margin-top:18px;background:#0d0e0c;border:1px solid #26271f;border-radius:6px;padding:16px 20px;">
+<svg width="100%" viewBox="0 0 640 400" style="display:block;font-family:'JetBrains Mono',monospace;">
+<defs>
+<marker id="swArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#8a8b80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<text x="20" y="24" fill="#c8ff4c" font-size="13" font-weight="600">nums = [1, 3, -1, -3, 5, 3, 6, 7]  ·  k = 3</text>
+
+<rect x="20" y="40" width="68" height="34" rx="4" fill="rgba(255,255,255,0.03)" stroke="#3a3b35" stroke-width="1"/>
+<rect x="88" y="40" width="68" height="34" rx="4" fill="rgba(255,255,255,0.03)" stroke="#3a3b35" stroke-width="1"/>
+<rect x="156" y="40" width="68" height="34" rx="4" fill="rgba(255,255,255,0.03)" stroke="#3a3b35" stroke-width="1"/>
+<rect x="224" y="40" width="68" height="34" rx="4" fill="rgba(255,255,255,0.03)" stroke="#3a3b35" stroke-width="1"/>
+<rect x="292" y="40" width="68" height="34" rx="4" fill="rgba(255,255,255,0.03)" stroke="#3a3b35" stroke-width="1"/>
+<rect x="360" y="40" width="68" height="34" rx="4" fill="rgba(255,255,255,0.03)" stroke="#3a3b35" stroke-width="1"/>
+<rect x="428" y="40" width="68" height="34" rx="4" fill="rgba(255,255,255,0.03)" stroke="#3a3b35" stroke-width="1"/>
+<rect x="496" y="40" width="68" height="34" rx="4" fill="rgba(255,255,255,0.03)" stroke="#3a3b35" stroke-width="1"/>
+
+<text x="54" y="61" fill="#e9e6dc" font-size="13" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="122" y="61" fill="#e9e6dc" font-size="13" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="190" y="61" fill="#e9e6dc" font-size="13" text-anchor="middle" dominant-baseline="central">-1</text>
+<text x="258" y="61" fill="#e9e6dc" font-size="13" text-anchor="middle" dominant-baseline="central">-3</text>
+<text x="326" y="61" fill="#e9e6dc" font-size="13" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="394" y="61" fill="#e9e6dc" font-size="13" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="462" y="61" fill="#e9e6dc" font-size="13" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="530" y="61" fill="#e9e6dc" font-size="13" text-anchor="middle" dominant-baseline="central">7</text>
+
+<text x="54" y="86" fill="#8a8b80" font-size="10" text-anchor="middle">0</text>
+<text x="122" y="86" fill="#8a8b80" font-size="10" text-anchor="middle">1</text>
+<text x="190" y="86" fill="#8a8b80" font-size="10" text-anchor="middle">2</text>
+<text x="258" y="86" fill="#8a8b80" font-size="10" text-anchor="middle">3</text>
+<text x="326" y="86" fill="#8a8b80" font-size="10" text-anchor="middle">4</text>
+<text x="394" y="86" fill="#8a8b80" font-size="10" text-anchor="middle">5</text>
+<text x="462" y="86" fill="#8a8b80" font-size="10" text-anchor="middle">6</text>
+<text x="530" y="86" fill="#8a8b80" font-size="10" text-anchor="middle">7</text>
+
+<rect x="20" y="106" width="204" height="26" rx="3" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="26" y="123" fill="#ffb74d" font-size="10">fenêtre 0 → max(1,3,-1) = 3</text>
+
+<rect x="88" y="140" width="204" height="26" rx="3" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="94" y="157" fill="#ffb74d" font-size="10">fenêtre 1 → max(3,-1,-3) = 3</text>
+
+<rect x="156" y="174" width="204" height="26" rx="3" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="162" y="191" fill="#ffb74d" font-size="10">fenêtre 2 → max(-1,-3,5) = 5</text>
+
+<rect x="224" y="208" width="204" height="26" rx="3" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="230" y="225" fill="#ffb74d" font-size="10">fenêtre 3 → max(-3,5,3) = 5</text>
+
+<rect x="292" y="242" width="204" height="26" rx="3" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="298" y="259" fill="#ffb74d" font-size="10">fenêtre 4 → max(5,3,6) = 6</text>
+
+<rect x="360" y="276" width="204" height="26" rx="3" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="366" y="293" fill="#ffb74d" font-size="10">fenêtre 5 → max(3,6,7) = 7</text>
+
+<line x1="54" y1="132" x2="122" y2="140" stroke="#8a8b80" stroke-width="1" opacity="0.5" marker-end="url(#swArrow)"/>
+
+<text x="20" y="335" fill="#c8ff4c" font-size="13" font-weight="600">résultat = [3, 3, 5, 5, 6, 7]</text>
+<text x="20" y="355" fill="#8a8b80" font-size="10">6 fenêtres pour 8 éléments avec k=3 → len(nums) - k + 1 = 6</text>
+</svg>
+</div>`,
+    examples:[
+      {in:"sliding_window_maximium([1, 3, -1, -3, 5, 3, 6, 7], 3)", out:"[3, 3, 5, 5, 6, 7]"},
+      {in:"sliding_window_maximium([4, 2, 12, 11, -5], 2)", out:"[4, 12, 12, 11]"},
+      {in:"sliding_window_maximium([], 3)", out:"[]"},
+    ],
+    hints:["Version simple : max(nums[i:i+k]) pour chaque fenêtre — O(n·k), suffisant à l'examen.","En compréhension : [max(nums[i:i+k]) for i in range(len(nums) - k + 1)].","Version optimale O(n) : deque monotone décroissante d'indices (collections.deque)."],
+    sig:"def sliding_window_maximium(nums: list[int], k: int) -> list[int]:",
+    starter:`def sliding_window_maximium(nums: list[int], k: int) -> list[int]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[1,3,-1,-3,5,3,6,7],3], out:[3,3,5,5,6,7]},
+      {args:[[4,2,12,11,-5],2], out:[4,12,12,11]},
+      {args:[[],3], out:[]},
+      {args:[[1,2,3],0], out:[]},
+      {args:[[5],1], out:[5]},
+      {args:[[1,2,3,4],4], out:[4]},
+      {args:[[9,8,7,6],2], out:[9,8,7]},
+      {args:[[-5,-2,-8],2], out:[-2,-2]},
+    ],
+    solutions:[
+      {name:"Compréhension + max()", time:"O(n·k)", space:"O(n)", code:`def sliding_window_maximium(nums, k):
+    if not nums or k <= 0:
+        return []
+    return [max(nums[i:i + k]) for i in range(len(nums) - k + 1)]`},
+      {name:"Deque monotone (optimal)", time:"O(n)", space:"O(k)", code:`from collections import deque
+
+def sliding_window_maximium(nums, k):
+    if not nums or k <= 0:
+        return []
+    dq = deque()   # indices, valeurs décroissantes
+    result = []
+    for i, n in enumerate(nums):
+        # retirer les indices sortis de la fenêtre
+        while dq and dq[0] <= i - k:
+            dq.popleft()
+        # retirer les valeurs plus petites que n (inutiles)
+        while dq and nums[dq[-1]] <= n:
+            dq.pop()
+        dq.append(i)
+        if i >= k - 1:
+            result.append(nums[dq[0]])
+    return result`},
+    ]
+  },
+  {
+    id:"r4_package_dependency_resolver", group:"42exam.net · rank04", title:"#07 · package_dependency_resolver", diff:"hard",
+    statement:`Écris une fonction qui détermine un ordre d'installation valide des paquets en résolvant leurs dépendances (tri topologique, ex. algorithme de Kahn).<br><br>La fonction doit :<br>• Prendre un dictionnaire {paquet: [dépendances]}<br>• Renvoyer les paquets dans l'ordre d'installation (dépendances en premier)<br>• Renvoyer <code>[]</code> si aucun ordre valide n'existe (dépendances circulaires ou auto-dépendances)<br>• Ignorer les références aux paquets absents des clés du dictionnaire<br>• <b>Sortie déterministe</b> : quand plusieurs paquets sont disponibles en même temps, les traiter par ordre alphabétique
+<div style="margin-top:18px;background:#0d0e0c;border:1px solid #26271f;border-radius:6px;padding:16px 20px;">
+<svg width="100%" viewBox="0 0 640 420" style="display:block;font-family:'JetBrains Mono',monospace;">
+<defs>
+<marker id="pdrArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#8a8b80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+<text x="20" y="24" fill="#c8ff4c" font-size="13" font-weight="600">entrée : un dictionnaire {paquet: [ses dépendances]}</text>
+<text x="20" y="42" fill="#8a8b80" font-size="10">{"app": ["database"], "database": ["driver"], "driver": []}</text>
+
+<rect x="440" y="66" width="140" height="46" rx="6" fill="rgba(200,255,76,0.06)" stroke="#3a3b35" stroke-width="1"/>
+<text x="510" y="84" fill="#e9e6dc" font-size="12" font-weight="600" text-anchor="middle">driver</text>
+<text x="510" y="100" fill="#8a8b80" font-size="9" text-anchor="middle">aucune dépendance</text>
+
+<rect x="240" y="66" width="140" height="46" rx="6" fill="rgba(126,197,255,0.06)" stroke="#3a3b35" stroke-width="1"/>
+<text x="310" y="84" fill="#e9e6dc" font-size="12" font-weight="600" text-anchor="middle">database</text>
+<text x="310" y="100" fill="#8a8b80" font-size="9" text-anchor="middle">a besoin de driver</text>
+
+<rect x="40" y="66" width="140" height="46" rx="6" fill="rgba(200,150,255,0.06)" stroke="#3a3b35" stroke-width="1"/>
+<text x="110" y="84" fill="#e9e6dc" font-size="12" font-weight="600" text-anchor="middle">app</text>
+<text x="110" y="100" fill="#8a8b80" font-size="9" text-anchor="middle">a besoin de database</text>
+
+<line x1="380" y1="89" x2="438" y2="89" stroke="#8a8b80" stroke-width="1" marker-end="url(#pdrArrow)"/>
+<line x1="180" y1="89" x2="238" y2="89" stroke="#8a8b80" stroke-width="1" marker-end="url(#pdrArrow)"/>
+<text x="409" y="75" fill="#8a8b80" font-size="9" text-anchor="middle">dépend de</text>
+<text x="209" y="75" fill="#8a8b80" font-size="9" text-anchor="middle">dépend de</text>
+
+<text x="20" y="150" fill="#e9e6dc" font-size="12" font-weight="600">règle : on ne peut installer un paquet que si toutes ses dépendances</text>
+<text x="20" y="167" fill="#e9e6dc" font-size="12" font-weight="600">sont déjà installées</text>
+
+<text x="20" y="195" fill="#e9e6dc" font-size="12" font-weight="600">ordre d'installation valide (dépendances en premier) :</text>
+
+<rect x="40" y="212" width="100" height="38" rx="6" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="90" y="235" fill="#ffb74d" font-size="12" font-weight="600" text-anchor="middle">1. driver</text>
+<line x1="140" y1="231" x2="198" y2="231" stroke="#8a8b80" stroke-width="1" marker-end="url(#pdrArrow)"/>
+
+<rect x="200" y="212" width="110" height="38" rx="6" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="255" y="235" fill="#ffb74d" font-size="12" font-weight="600" text-anchor="middle">2. database</text>
+<line x1="310" y1="231" x2="368" y2="231" stroke="#8a8b80" stroke-width="1" marker-end="url(#pdrArrow)"/>
+
+<rect x="370" y="212" width="90" height="38" rx="6" fill="none" stroke="#ffb74d" stroke-width="1.5"/>
+<text x="415" y="235" fill="#ffb74d" font-size="12" font-weight="600" text-anchor="middle">3. app</text>
+
+<rect x="20" y="290" width="600" height="100" rx="6" fill="rgba(255,107,91,0.05)" stroke="#26271f" stroke-width="1"/>
+<text x="36" y="312" fill="#ff6b5b" font-size="12" font-weight="600">et si deux paquets sont en dépendances circulaires ?</text>
+<text x="36" y="332" fill="#8a8b80" font-size="10">X dépend de Y, et Y dépend de X → aucun ordre valide n'existe</text>
+<text x="36" y="350" fill="#8a8b80" font-size="10">personne ne peut être installé en premier → on renvoie une liste vide []</text>
+<text x="36" y="368" fill="#8a8b80" font-size="10">c'est pour ça qu'on détecte les cycles avant de renvoyer un résultat</text>
+</svg>
+</div>`,
+    examples:[
+      {in:'package_dependency_resolver({"app": ["database"], "database": ["driver"], "driver": []})', out:'["driver", "database", "app"]'},
+      {in:'package_dependency_resolver({"A": [], "B": ["A"], "C": ["A", "B"]})', out:'["A", "B", "C"]'},
+      {in:'package_dependency_resolver({"X": ["Y"], "Y": ["X"]})', out:"[]"},
+      {in:'package_dependency_resolver({"web": [], "api": [], "frontend": ["web"], "backend": ["api"]})', out:'["api", "backend", "web", "frontend"]'},
+    ],
+    hints:["Algorithme de Kahn : compte les dépendances restantes de chaque paquet (in-degree), traite ceux à 0.","Pour la sortie déterministe, utilise un tas (heapq) ou trie la liste des paquets disponibles à chaque itération.","Si à la fin tous les paquets n'ont pas été traités → cycle → retourne []. Filtre d'abord les dépendances vers des paquets inexistants."],
+    sig:"def package_dependency_resolver(packages: dict[str, list[str]]) -> list[str]:",
+    starter:`def package_dependency_resolver(packages: dict[str, list[str]]) -> list[str]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[{"app":["database"],"database":["driver"],"driver":[]}], out:["driver","database","app"]},
+      {args:[{"A":[],"B":["A"],"C":["A","B"]}], out:["A","B","C"]},
+      {args:[{}], out:[]},
+      {args:[{"X":["Y"],"Y":["X"]}], out:[]},
+      {args:[{"web":[],"api":[],"frontend":["web"],"backend":["api"]}], out:["api","backend","web","frontend"]},
+      {args:[{"A":["A"]}], out:[]},
+      {args:[{"A":["Z"],"B":["A"]}], out:["A","B"]},
+      {args:[{"solo":[]}], out:["solo"]},
+    ],
+    solutions:[
+      {name:"Kahn + heapq (référence standard)", time:"O(V log V + E)", space:"O(V + E)", code:`import heapq
+
+def package_dependency_resolver(packages):
+    # Filtrer les dépendances vers des paquets inexistants
+    deps = {p: [d for d in ds if d in packages]
+            for p, ds in packages.items()}
+
+    # Auto-dépendance = cycle immédiat
+    for p, ds in deps.items():
+        if p in ds:
+            return []
+
+    # in-degree = nombre de dépendances restantes
+    in_degree = {p: len(ds) for p, ds in deps.items()}
+
+    # graphe inversé : qui dépend de moi ?
+    dependents = {p: [] for p in deps}
+    for p, ds in deps.items():
+        for d in ds:
+            dependents[d].append(p)
+
+    # tas : on dépile TOUJOURS le plus petit paquet DISPONIBLE,
+    # sans attendre que tout un "niveau" soit traité
+    ready = [p for p, deg in in_degree.items() if deg == 0]
+    heapq.heapify(ready)
+
+    result = []
+    while ready:
+        p = heapq.heappop(ready)
+        result.append(p)
+        for dep in dependents[p]:
+            in_degree[dep] -= 1
+            if in_degree[dep] == 0:
+                heapq.heappush(ready, dep)
+
+    return result if len(result) == len(deps) else []`},
+      {name:"DFS + tri (post-ordre inversé)", time:"O(V + E) + O(V log V)", space:"O(V + E)", code:`def package_dependency_resolver(packages):
+    deps = {p: [d for d in ds if d in packages]
+            for p, ds in packages.items()}
+
+    for p, ds in deps.items():
+        if p in ds:
+            return []
+
+    visited = set()
+    in_progress = set()
+    result = []
+
+    def visit(p):
+        if p in visited:
+            return True
+        if p in in_progress:
+            return False   # cycle détecté
+        in_progress.add(p)
+        for d in deps[p]:
+            if not visit(d):
+                return False
+        in_progress.discard(p)
+        visited.add(p)
+        result.append(p)
+        return True
+
+    # ordre alphabétique de départ pour un résultat déterministe
+    for p in sorted(deps):
+        if not visit(p):
+            return []
+
+    return result`},
+    ]
+  },
+
+  // ============================================================
+  //  42exam.net · rank05 (7 sujets officiels)
+  // ============================================================
+  {
+    id:"py_compress_decompress", group:"42exam.net · rank05", title:"#01 · py_compress_decompress", diff:"easy",
+    statement:`Écris deux fonctions : <code>compress</code> et <code>decompress</code>.<br><br><code>compress(s: str) → str</code> :<br>• Compresse les caractères consécutifs répétés en ajoutant leur nombre après le caractère.<br>• Omets le nombre '1' pour un caractère unique.<br>• Renvoie une chaîne vide si l'entrée est vide.<br><br><code>decompress(s: str) → str</code> :<br>• Décompresse une chaîne compressée vers sa forme initiale.<br>• Gère les nombres à plusieurs chiffres (ex. <code>"a12"</code> → 12 'a').`,
+    examples:[
+      {in:'compress("aabcccccaaa")', out:'"a2bc5a3"'},
+      {in:'decompress("a2bc5a3")', out:'"aabcccccaaa"'},
+      {in:'compress("")', out:'""'},
+    ],
+    hints:["Parcours la chaîne en comptant combien de fois un caractère se répète d'affilée avant de changer.","Pour decompress, il faut accumuler TOUS les chiffres qui suivent une lettre (pas juste un seul), au cas où le nombre a plusieurs chiffres.","Un caractère suivi d'aucun chiffre dans la version compressée compte pour 1 seule occurrence."],
+    sig:"def compress(s: str) -> str:",
+    starter:`def compress(s: str) -> str:
+    # écris ton code ici
+    pass
+
+def decompress(s: str) -> str:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["aabcccccaaa"], out:"a2bc5a3"},
+      {args:[""], out:""},
+      {args:["abc"], out:"abc"},
+      {args:["aaaa"], out:"a4"},
+      {args:["aabbcc"], out:"a2b2c2"},
+      {args:["a"], out:"a"},
+      {args:["aaaaaaaaaaaa"], out:"a12"},
+    ],
+    solutions:[
+      {name:"Boucle avec compteur", time:"O(n)", space:"O(n)", code:`def compress(s):
+    if not s:
+        return ""
+    result = []
+    count = 1
+    for i in range(1, len(s) + 1):
+        if i < len(s) and s[i] == s[i - 1]:
+            count += 1
+        else:
+            result.append(s[i - 1] if count == 1 else f"{s[i-1]}{count}")
+            count = 1
+    return "".join(result)
+
+def decompress(s):
+    result = []
+    i = 0
+    while i < len(s):
+        ch = s[i]
+        i += 1
+        num = ""
+        while i < len(s) and s[i].isdigit():
+            num += s[i]
+            i += 1
+        result.append(ch * (int(num) if num else 1))
+    return "".join(result)`},
+      {name:"itertools.groupby", time:"O(n)", space:"O(n)", code:`from itertools import groupby
+
+def compress(s):
+    if not s:
+        return ""
+    parts = []
+    for ch, grp in groupby(s):
+        n = len(list(grp))
+        parts.append(ch if n == 1 else f"{ch}{n}")
+    return "".join(parts)
+
+def decompress(s):
+    result = []
+    i = 0
+    while i < len(s):
+        ch = s[i]
+        i += 1
+        num = ""
+        while i < len(s) and s[i].isdigit():
+            num += s[i]
+            i += 1
+        result.append(ch * (int(num) if num else 1))
+    return "".join(result)`},
+    ]
+  },
+  {
+    id:"py_spiral_matrix", group:"42exam.net · rank05", title:"#02 · py_spiral_matrix", diff:"easy",
+    statement:`Écris une fonction qui génère une matrice 2D <code>n x n</code> remplie de nombres de 1 à <code>n²</code> dans l'ordre d'une spirale dans le sens des aiguilles d'une montre.<br><br>La spirale commence dans la case en haut à gauche (0, 0) vers la droite, puis vers le bas, la gauche et le haut.`,
+    examples:[
+      {in:"generate_spiral(3)", out:"[[1, 2, 3], [8, 9, 4], [7, 6, 5]]"},
+      {in:"generate_spiral(1)", out:"[[1]]"},
+    ],
+    hints:["Garde 4 bornes : top, bottom, left, right qui délimitent la zone restant à remplir.","Remplis la ligne du haut (gauche→droite), puis la colonne de droite (haut→bas), puis la ligne du bas (droite→gauche), puis la colonne de gauche (bas→haut), en resserrant les bornes après chaque côté.","Vérifie top <= bottom et left <= right avant de faire le 3e et le 4e côté — sinon tu repasses sur des cases déjà remplies."],
+    sig:"def generate_spiral(n: int) -> list[list[int]]:",
+    starter:`def generate_spiral(n: int) -> list[list[int]]:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[3], out:[[1,2,3],[8,9,4],[7,6,5]]},
+      {args:[1], out:[[1]]},
+      {args:[2], out:[[1,2],[4,3]]},
+      {args:[4], out:[[1,2,3,4],[12,13,14,5],[11,16,15,6],[10,9,8,7]]},
+      {args:[5], out:[[1,2,3,4,5],[16,17,18,19,6],[15,24,25,20,7],[14,23,22,21,8],[13,12,11,10,9]]},
+    ],
+    solutions:[
+      {name:"4 bornes qui se resserrent", time:"O(n²)", space:"O(n²)", code:`def generate_spiral(n):
+    matrix = [[0] * n for _ in range(n)]
+    top, bottom, left, right = 0, n - 1, 0, n - 1
+    num = 1
+    while top <= bottom and left <= right:
+        for c in range(left, right + 1):
+            matrix[top][c] = num
+            num += 1
+        top += 1
+        for r in range(top, bottom + 1):
+            matrix[r][right] = num
+            num += 1
+        right -= 1
+        if top <= bottom:
+            for c in range(right, left - 1, -1):
+                matrix[bottom][c] = num
+                num += 1
+            bottom -= 1
+        if left <= right:
+            for r in range(bottom, top - 1, -1):
+                matrix[r][left] = num
+                num += 1
+            left += 1
+    return matrix`},
+      {name:"Direction qui tourne à chaque obstacle", time:"O(n²)", space:"O(n²)", code:`def generate_spiral(n):
+    matrix = [[0] * n for _ in range(n)]
+    dirs = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    r = c = d = 0
+    for num in range(1, n * n + 1):
+        matrix[r][c] = num
+        dr, dc = dirs[d]
+        nr, nc = r + dr, c + dc
+        if not (0 <= nr < n and 0 <= nc < n) or matrix[nr][nc] != 0:
+            d = (d + 1) % 4
+            dr, dc = dirs[d]
+            nr, nc = r + dr, c + dc
+        r, c = nr, nc
+    return matrix`},
+    ]
+  },
+  {
+    id:"py_graph_cycle_detector", group:"42exam.net · rank05", title:"#03 · py_graph_cycle_detector", diff:"medium",
+    statement:`Écris une fonction qui détermine si un graphe orienté contient au moins un cycle.<br><br>La fonction prend un dictionnaire représentant une liste d'adjacence.<br>• Renvoie <code>True</code> si le graphe contient un cycle.<br>• Renvoie <code>False</code> si le graphe est acyclique ou vide.`,
+    examples:[
+      {in:"py_graph_cycle_detector({0: [1], 1: [2], 2: [0]})", out:"True"},
+      {in:"py_graph_cycle_detector({0: [1], 1: [2], 2: []})", out:"False"},
+      {in:"py_graph_cycle_detector({})", out:"False"},
+    ],
+    hints:["DFS avec 3 états par nœud : non visité (blanc), en cours de visite (gris, sur la pile de récursion), terminé (noir).","Un cycle existe si pendant le DFS tu retombes sur un nœud encore gris — pas juste déjà visité.","N'oublie pas de relancer le DFS depuis chaque nœud non visité : le graphe peut avoir plusieurs composantes séparées."],
+    sig:"def py_graph_cycle_detector(graph: dict[int, list[int]]) -> bool:",
+    starter:`def py_graph_cycle_detector(graph: dict[int, list[int]]) -> bool:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[{0:[1],1:[2],2:[0]}], out:true},
+      {args:[{0:[1],1:[2],2:[]}], out:false},
+      {args:[{}], out:false},
+      {args:[{0:[1,2],1:[2],2:[]}], out:false},
+      {args:[{0:[0]}], out:true},
+      {args:[{0:[1],1:[0]}], out:true},
+      {args:[{0:[],1:[],2:[]}], out:false},
+      {args:[{0:[1],1:[2],2:[3],3:[1]}], out:true},
+    ],
+    solutions:[
+      {name:"DFS 3 couleurs", time:"O(V+E)", space:"O(V)", code:`def py_graph_cycle_detector(graph):
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color = {node: WHITE for node in graph}
+
+    def dfs(node):
+        color[node] = GRAY
+        for neighbor in graph.get(node, []):
+            if color.get(neighbor, WHITE) == GRAY:
+                return True
+            if color.get(neighbor, WHITE) == WHITE and dfs(neighbor):
+                return True
+        color[node] = BLACK
+        return False
+
+    for node in graph:
+        if color[node] == WHITE and dfs(node):
+            return True
+    return False`},
+      {name:"DFS avec set 'en cours'", time:"O(V+E)", space:"O(V)", code:`def py_graph_cycle_detector(graph):
+    visited = set()
+    in_progress = set()
+
+    def dfs(node):
+        visited.add(node)
+        in_progress.add(node)
+        for neighbor in graph.get(node, []):
+            if neighbor in in_progress:
+                return True
+            if neighbor not in visited and dfs(neighbor):
+                return True
+        in_progress.discard(node)
+        return False
+
+    return any(dfs(node) for node in graph if node not in visited)`},
+    ]
+  },
+  {
+    id:"py_room_scheduler", group:"42exam.net · rank05", title:"#04 · py_room_scheduler", diff:"medium",
+    statement:`Écris une fonction qui détermine le nombre minimal de salles de réunion nécessaires et attribue les créneaux sans chevauchement.<br><br>Chaque réunion est une liste <code>[start_time, end_time]</code>.<br><br>La fonction doit :<br>• Renvoyer un dictionnaire avec <code>"total_rooms"</code> (nombre de salles) et <code>"schedule"</code> (créneaux attribués par salle).<br>• Renvoyer <code>{"total_rooms": 0, "schedule": []}</code> si la liste est vide.`,
+    examples:[
+      {in:"py_room_scheduler([[0, 30], [5, 10], [15, 20]])", out:'{"total_rooms": 2, "schedule": [[[0, 30]], [[5, 10], [15, 20]]]}'},
+      {in:"py_room_scheduler([])", out:'{"total_rooms": 0, "schedule": []}'},
+    ],
+    hints:["Trie les réunions par heure de début, puis traite-les une par une.","Pour chaque réunion, cherche si une salle déjà ouverte est libre (sa dernière réunion attribuée se termine avant que celle-ci commence) ; sinon ouvre une nouvelle salle.","Garde une liste de salles où chaque salle est une liste de créneaux déjà attribués, dans l'ordre où ils ont été ajoutés."],
+    sig:"def py_room_scheduler(meetings: list[list[int]]) -> dict[str, Any]:",
+    starter:`def py_room_scheduler(meetings: list[list[int]]) -> dict:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[[0,30],[5,10],[15,20]]], out:{total_rooms:2, schedule:[[[0,30]],[[5,10],[15,20]]]}},
+      {args:[[]], out:{total_rooms:0, schedule:[]}},
+      {args:[[[1,5]]], out:{total_rooms:1, schedule:[[[1,5]]]}},
+      {args:[[[1,5],[6,10]]], out:{total_rooms:1, schedule:[[[1,5],[6,10]]]}},
+      {args:[[[1,10],[2,6],[8,12]]], out:{total_rooms:2, schedule:[[[1,10]],[[2,6],[8,12]]]}},
+    ],
+    solutions:[
+      {name:"Tri + recherche de salle libre", time:"O(n²)", space:"O(n)", code:`def py_room_scheduler(meetings):
+    if not meetings:
+        return {"total_rooms": 0, "schedule": []}
+
+    ordered = sorted(meetings, key=lambda m: m[0])
+    rooms = []  # chaque salle : liste de créneaux déjà attribués
+
+    for meeting in ordered:
+        start, end = meeting
+        placed = False
+        for room in rooms:
+            if room[-1][1] <= start:
+                room.append(meeting)
+                placed = True
+                break
+        if not placed:
+            rooms.append([meeting])
+
+    return {"total_rooms": len(rooms), "schedule": rooms}`},
+      {name:"Heap des fins de salle", time:"O(n log n)", space:"O(n)", code:`import heapq
+
+def py_room_scheduler(meetings):
+    if not meetings:
+        return {"total_rooms": 0, "schedule": []}
+
+    ordered = sorted(meetings, key=lambda m: m[0])
+    heap = []  # (heure_de_fin, index_salle)
+    rooms = []
+
+    for meeting in ordered:
+        start, end = meeting
+        if heap and heap[0][0] <= start:
+            _, room_idx = heapq.heappop(heap)
+            rooms[room_idx].append(meeting)
+            heapq.heappush(heap, (end, room_idx))
+        else:
+            rooms.append([meeting])
+            heapq.heappush(heap, (end, len(rooms) - 1))
+
+    return {"total_rooms": len(rooms), "schedule": rooms}`},
+    ]
+  },
+  {
+    id:"py_island_matrix_counter", group:"42exam.net · rank05", title:"#05 · py_island_matrix_counter", diff:"medium",
+    statement:`Écris une fonction <code>island_matrix_counter(matrix)</code> qui renvoie le nombre total d'îles dans une matrice 2D contenant des valeurs <code>"1"</code> et <code>"0"</code>.<br><br>• Une île est un groupe de cases <code>"1"</code> connectées horizontalement ou verticalement (les diagonales ne comptent pas).<br>• Renvoie 0 si la matrice est vide.`,
+    examples:[
+      {in:'island_matrix_counter([["1","1","1","1","0"], ["1","1","1","0","0"], ["1","1","1","1","0"], ["0","0","0","0","0"]])', out:"1"},
+      {in:'island_matrix_counter([["1","1","0","0","0"], ["1","1","0","0","0"], ["0","0","1","0","0"], ["0","0","0","1","1"]])', out:"3"},
+      {in:"island_matrix_counter([])", out:"0"},
+    ],
+    hints:["Dès que tu trouves un '1' non visité, c'est le début d'une nouvelle île : incrémente le compteur et « noie » toute l'île avec un parcours (DFS/BFS).","Marque les cases visitées dans un set (ou directement dans la matrice) pour ne jamais recompter la même île.","Les 4 directions à explorer sont haut/bas/gauche/droite, jamais les diagonales."],
+    sig:"def island_matrix_counter(matrix: list[list[str]]) -> int:",
+    starter:`def island_matrix_counter(matrix: list[list[str]]) -> int:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[[["1","1","1","1","0"],["1","1","1","0","0"],["1","1","1","1","0"],["0","0","0","0","0"]]], out:1},
+      {args:[[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]], out:3},
+      {args:[[]], out:0},
+      {args:[[["0","0"],["0","0"]]], out:0},
+      {args:[[["1"]]], out:1},
+      {args:[[["1","0","1"],["0","0","0"],["1","0","1"]]], out:4},
+    ],
+    solutions:[
+      {name:"DFS itératif avec pile (évite la récursion)", time:"O(rows*cols)", space:"O(rows*cols)", code:`def island_matrix_counter(matrix):
+    if not matrix:
+        return 0
+    rows, cols = len(matrix), len(matrix[0])
+    visited = set()
+
+    def sink(r, c):
+        stack = [(r, c)]
+        while stack:
+            cr, cc = stack.pop()
+            if cr < 0 or cr >= rows or cc < 0 or cc >= cols:
+                continue
+            if (cr, cc) in visited or matrix[cr][cc] != "1":
+                continue
+            visited.add((cr, cc))
+            stack += [(cr+1, cc), (cr-1, cc), (cr, cc+1), (cr, cc-1)]
+
+    count = 0
+    for r in range(rows):
+        for c in range(cols):
+            if matrix[r][c] == "1" and (r, c) not in visited:
+                count += 1
+                sink(r, c)
+    return count`},
+      {name:"BFS avec deque", time:"O(rows*cols)", space:"O(rows*cols)", code:`from collections import deque
+
+def island_matrix_counter(matrix):
+    if not matrix:
+        return 0
+    rows, cols = len(matrix), len(matrix[0])
+    visited = set()
+    count = 0
+
+    for r in range(rows):
+        for c in range(cols):
+            if matrix[r][c] == "1" and (r, c) not in visited:
+                count += 1
+                queue = deque([(r, c)])
+                visited.add((r, c))
+                while queue:
+                    cr, cc = queue.popleft()
+                    for dr, dc in ((1,0),(-1,0),(0,1),(0,-1)):
+                        nr, nc = cr + dr, cc + dc
+                        if 0 <= nr < rows and 0 <= nc < cols and matrix[nr][nc] == "1" and (nr, nc) not in visited:
+                            visited.add((nr, nc))
+                            queue.append((nr, nc))
+    return count`},
+    ]
+  },
+  {
+    id:"py_prism_detector", group:"42exam.net · rank05", title:"#06 · py_prism_detector", diff:"hard",
+    statement:`Écris une fonction qui cherche toutes les occurrences d'un mot cible dans une grille 2D dans les 8 directions.<br><br>• Renvoie une liste de tuples <code>(x, y, code_direction)</code>.<br>• Renvoie <code>[]</code> si la grille ou le mot est vide.`,
+    examples:[
+      {in:'prism_detector(["CAT", "A..", "T.."], "CAT")', out:'[(0, 0, "H"), (0, 0, "V")]'},
+      {in:'prism_detector([], "CAT")', out:"[]"},
+    ],
+    hints:["8 directions = toutes les combinaisons (dr, dc) avec dr,dc ∈ {-1,0,1} sauf (0,0) ; donne un code à chacune (H=droite, V=bas, D1/D2=diagonales, et leurs opposés HR/VR/D1R/D2R).","Pour chaque case de départ qui correspond à la première lettre du mot, teste chaque direction en vérifiant que toutes les lettres suivantes restent dans la grille et correspondent au pattern.","L'ordre du résultat suit le parcours : case par case (ligne puis colonne), puis direction par direction pour une même case de départ."],
+    sig:"def prism_detector(grid: list[str], pattern: str):",
+    starter:`def prism_detector(grid: list[str], pattern: str):
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:[["CAT","A..","T.."],"CAT"], out:[[0,0,"H"],[0,0,"V"]]},
+      {args:[[],"CAT"], out:[]},
+      {args:[["CAT"],""], out:[]},
+      {args:[["ABC","DEF","GHI"],"XYZ"], out:[]},
+      {args:[["A"],"A"], out:[[0,0,"H"],[0,0,"HR"],[0,0,"V"],[0,0,"VR"],[0,0,"D1"],[0,0,"D1R"],[0,0,"D2"],[0,0,"D2R"]]},
+    ],
+    solutions:[
+      {name:"8 directions codées, vérif case par case", time:"O(rows*cols*len(pattern))", space:"O(1) hors résultat", code:`def prism_detector(grid, pattern):
+    if not grid or not pattern:
+        return []
+
+    rows, cols = len(grid), len(grid[0])
+    directions = [
+        (0, 1, "H"), (0, -1, "HR"),
+        (1, 0, "V"), (-1, 0, "VR"),
+        (1, 1, "D1"), (-1, -1, "D1R"),
+        (1, -1, "D2"), (-1, 1, "D2R"),
+    ]
+    n = len(pattern)
+    results = []
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] != pattern[0]:
+                continue
+            for dr, dc, code in directions:
+                rr, cc = r, c
+                ok = True
+                for i in range(n):
+                    if not (0 <= rr < rows and 0 <= cc < cols) or grid[rr][cc] != pattern[i]:
+                        ok = False
+                        break
+                    rr += dr
+                    cc += dc
+                if ok:
+                    results.append((r, c, code))
+    return results`},
+    ]
+  },
+  {
+    id:"py_word_ladder", group:"42exam.net · rank05", title:"#07 · py_word_ladder", diff:"hard",
+    statement:`Écris une fonction qui calcule la longueur de la séquence de transformation la plus courte d'un mot de départ à un mot de fin.<br><br>• Renvoie le nombre de mots dans l'échelle la plus courte.<br>• Renvoie 0 si aucune transformation n'est possible.`,
+    examples:[
+      {in:'word_ladder("hit", "cog", ["hot", "dot", "dog", "lot", "log", "cog"])', out:"5"},
+      {in:'word_ladder("hit", "cog", ["hot", "dot", "dog", "lot", "log"])', out:"0"},
+    ],
+    hints:["C'est un plus court chemin dans un graphe implicite : BFS niveau par niveau depuis start, où une arête relie deux mots qui ne diffèrent que d'une seule lettre.","end doit être présent dans sentence, sinon la réponse est 0 directement.","Pour trouver les voisins d'un mot, génère tous les mots obtenus en changeant une lettre à la fois et vérifie lesquels sont dans le dictionnaire — plus rapide que de comparer à tous les mots un par un."],
+    sig:"def word_ladder(start: str, end: str, sentence: list[str]) -> int:",
+    starter:`def word_ladder(start: str, end: str, sentence: list[str]) -> int:
+    # écris ton code ici
+    pass`,
+    tests:[
+      {args:["hit","cog",["hot","dot","dog","lot","log","cog"]], out:5},
+      {args:["hit","cog",["hot","dot","dog","lot","log"]], out:0},
+      {args:["ab","cd",["ab","ad","cd"]], out:3},
+      {args:["hit","hit",["hot"]], out:1},
+      {args:["hot","dog",["hot","dog"]], out:0},
+    ],
+    solutions:[
+      {name:"BFS niveau par niveau (génère les voisins)", time:"O(n * L²)", space:"O(n)", code:`from collections import deque
+
+def word_ladder(start, end, sentence):
+    if start == end:
+        return 1
+    word_set = set(sentence)
+    if end not in word_set:
+        return 0
+
+    queue = deque([(start, 1)])
+    visited = {start}
+
+    while queue:
+        word, steps = queue.popleft()
+        for i in range(len(word)):
+            for c in "abcdefghijklmnopqrstuvwxyz":
+                if c == word[i]:
+                    continue
+                candidate = word[:i] + c + word[i+1:]
+                if candidate == end:
+                    return steps + 1
+                if candidate in word_set and candidate not in visited:
+                    visited.add(candidate)
+                    queue.append((candidate, steps + 1))
+    return 0`},
+      {name:"BFS avec comparaison directe au dictionnaire", time:"O(n² * L)", space:"O(n)", code:`from collections import deque
+
+def word_ladder(start, end, sentence):
+    if start == end:
+        return 1
+    word_set = set(sentence)
+    if end not in word_set:
+        return 0
+
+    def one_diff(a, b):
+        return sum(1 for x, y in zip(a, b) if x != y) == 1
+
+    queue = deque([(start, 1)])
+    visited = {start}
+
+    while queue:
+        word, steps = queue.popleft()
+        remaining = [w for w in word_set if w not in visited]
+        for candidate in remaining:
+            if one_diff(word, candidate):
+                if candidate == end:
+                    return steps + 1
+                visited.add(candidate)
+                queue.append((candidate, steps + 1))
+    return 0`},
+      {name:"Aucune fonction/module importé (génère les voisins)", time:"O(n * L²)", space:"O(n)", code:`def word_ladder(start, end, sentence):
+    if start == end:
+        return 1
+
+    # pas de 'in' sur un set : on cherche end à la main dans sentence
+    end_found = False
+    for w in sentence:
+        if w == end:
+            end_found = True
+            break
+    if not end_found:
+        return 0
+
+    # la "file" du BFS est une simple liste + un index qui avance,
+    # pas de collections.deque
+    queue = [start]
+    steps = [1]
+    visited = [start]
+    head = 0
+
+    while head < len(queue):
+        word = queue[head]
+        step = steps[head]
+        head += 1
+
+        for i in range(len(word)):
+            code = 97  # 'a' en ASCII, pas de "abcdefghijklmnopqrstuvwxyz"
+            while code <= 122:  # 'z'
+                c = chr(code)
+                code += 1
+                if c == word[i]:
+                    continue
+                candidate = word[:i] + c + word[i + 1:]
+
+                if candidate == end:
+                    return step + 1
+
+                in_sentence = False
+                for w in sentence:
+                    if w == candidate:
+                        in_sentence = True
+                        break
+                if not in_sentence:
+                    continue
+
+                already_visited = False
+                for v in visited:
+                    if v == candidate:
+                        already_visited = True
+                        break
+                if already_visited:
+                    continue
+
+                visited.append(candidate)
+                queue.append(candidate)
+                steps.append(step + 1)
+
+    return 0`},
+      {name:"Sans import — comparaison directe au dictionnaire", time:"O(n² * L)", space:"O(n)", code:`def word_ladder(start, end, sentence):
+    if start == end:
+        return 1
+
+    end_found = False
+    for w in sentence:
+        if w == end:
+            end_found = True
+            break
+    if not end_found:
+        return 0
+
+    def one_letter_apart(a, b):
+        if len(a) != len(b):
+            return False
+        diff = 0
+        for i in range(len(a)):
+            if a[i] != b[i]:
+                diff += 1
+                if diff > 1:
+                    return False
+        return diff == 1
+
+    visited = [start]
+    queue = [start]
+    steps = [1]
+    head = 0
+
+    while head < len(queue):
+        word = queue[head]
+        step = steps[head]
+        head += 1
+
+        if word == end:
+            return step
+
+        for w in sentence:
+            already_visited = False
+            for v in visited:
+                if v == w:
+                    already_visited = True
+                    break
+            if already_visited:
+                continue
+
+            if one_letter_apart(word, w):
+                visited.append(w)
+                queue.append(w)
+                steps.append(step + 1)
+
+    return 0`},
+    ]
+  },
+
+];
+
+/* ========================================================================
+   STATE
+   ======================================================================== */
+let pyodide = null;
+let currentEx = null;
+let activeSolutionIdx = 0;
+let solutionRevealed = {};
+let filter = "all";
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+function diffLabel(d){
+  return d === "easy" ? "facile" : d === "medium" ? "moyen" : "difficile";
+}
+
+/* ========================================================================
+   SIDEBAR RENDERING
+   ======================================================================== */
+function renderList(){
+  const list = $("#exList");
+  list.innerHTML = "";
+  const groups = {};
+  for(const ex of EXERCISES){
+    if(filter !== "all" && ex.diff !== filter) continue;
+    if(!groups[ex.group]) groups[ex.group] = [];
+    groups[ex.group].push(ex);
+  }
+  const exNum = (ex) => {
+    const m = ex.title.match(/#(\d+)/);
+    return m ? parseInt(m[1], 10) : 999;
+  };
+  for(const [group, items] of Object.entries(groups)){
+    items.sort((a, b) => exNum(a) - exNum(b));
+    const lbl = document.createElement("div");
+    lbl.className = "ex-group-label";
+    lbl.textContent = group;
+    list.appendChild(lbl);
+    for(const ex of items){
+      const row = document.createElement("div");
+      row.className = "ex-item" + (currentEx?.id === ex.id ? " active" : "");
+      const diffLetter = ex.diff === "easy" ? "F" : ex.diff === "medium" ? "M" : "D";
+      row.innerHTML = `
+        <span class="ex-title">${ex.title}</span>
+        <span class="diff ${ex.diff==='easy'?'easy':ex.diff==='medium'?'med':'hard'}">${diffLetter}</span>
+      `;
+      row.addEventListener("click", () => loadExercise(ex.id));
+      list.appendChild(row);
+    }
+  }
+}
+
+$$("#filters .chip").forEach(c => c.addEventListener("click", () => {
+  $$("#filters .chip").forEach(x => x.classList.remove("active"));
+  c.classList.add("active");
+  filter = c.dataset.f;
+  renderList();
+}));
+
+/* ========================================================================
+   SYNTAX HIGHLIGHTING (mini)
+   ======================================================================== */
+function escHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function hlPython(code){
+  // Single-pass tokenizer so we never re-tokenize previously injected HTML.
+  const KW = new Set(["def","return","if","elif","else","for","while","in","not","and","or","is","None","True","False","class","import","from","as","with","try","except","finally","raise","pass","break","continue","lambda","yield","global","nonlocal"]);
+  let out = "";
+  let i = 0;
+  const n = code.length;
+  while(i < n){
+    const c = code[i];
+    // comment
+    if(c === "#"){
+      let j = i;
+      while(j < n && code[j] !== "\n") j++;
+      out += '<span class="tok-com">' + escHtml(code.slice(i, j)) + '</span>';
+      i = j;
+      continue;
+    }
+    // string (single or double, with escape support)
+    if(c === '"' || c === "'"){
+      const quote = c;
+      let j = i + 1;
+      while(j < n){
+        if(code[j] === "\\" && j + 1 < n){ j += 2; continue; }
+        if(code[j] === quote){ j++; break; }
+        if(code[j] === "\n") break; // unterminated, stop at newline
+        j++;
+      }
+      out += '<span class="tok-str">' + escHtml(code.slice(i, j)) + '</span>';
+      i = j;
+      continue;
+    }
+    // number
+    if(/[0-9]/.test(c) && (i === 0 || !/[a-zA-Z_0-9]/.test(code[i-1]))){
+      let j = i;
+      while(j < n && /[0-9.]/.test(code[j])) j++;
+      out += '<span class="tok-num">' + escHtml(code.slice(i, j)) + '</span>';
+      i = j;
+      continue;
+    }
+    // identifier / keyword
+    if(/[a-zA-Z_]/.test(c)){
+      let j = i;
+      while(j < n && /[a-zA-Z0-9_]/.test(code[j])) j++;
+      const word = code.slice(i, j);
+      if(KW.has(word)){
+        out += '<span class="tok-kw">' + word + '</span>';
+      } else if(word === "self"){
+        out += '<span class="tok-self">self</span>';
+      } else if(code[j] === "("){
+        out += '<span class="tok-fn">' + word + '</span>';
+      } else {
+        out += word;
+      }
+      i = j;
+      continue;
+    }
+    // anything else: escape and pass through
+    out += escHtml(c);
+    i++;
+  }
+  return out;
+}
+
+/* ========================================================================
+   EXERCISE LOAD & RENDER
+   ======================================================================== */
+function loadExercise(id){
+  currentEx = EXERCISES.find(e => e.id === id);
+  if(!currentEx) return;
+  activeSolutionIdx = 0;
+  renderList();
+  renderExercise();
+  // mobile : fermer la sidebar et revenir à l'onglet énoncé
+  closeSidebar();
+  setMobileTab("enonce");
+}
+
+function renderExercise(){
+  const ex = currentEx;
+  const examplesHtml = ex.examples.map(e => `
+    <div class="example">
+      <div class="lbl">entrée</div>
+      <pre>${e.in}</pre>
+      <div class="lbl" style="margin-top:8px">sortie</div>
+      <pre>${e.out}</pre>
+    </div>
+  `).join("");
+  const hintsHtml = ex.hints.map(h => `<li>${h}</li>`).join("");
+  const solBtn = `<div class="reveal-gate" id="solGate">
+    <div>Les solutions sont masquées pour que tu puisses essayer d'abord.</div>
+    <button onclick="revealSolutions()">Afficher les solutions</button>
+  </div>`;
+  const tabs = ex.solutions.map((s,i)=>`<button class="sol-tab ${i===0?'active':''}" data-i="${i}">${s.name}</button>`).join("");
+  const bodies = ex.solutions.map((s,i)=>`
+    <div class="sol-body ${i===0?'active':''}" data-i="${i}">
+      <div class="sol-meta">
+        <span><b>Temps :</b> ${s.time}</span>
+        <span><b>Espace :</b> ${s.space}</span>
+        <span style="margin-left:auto"><button class="btn" onclick="copySolution(${i})" style="padding:3px 10px;font-size:10px">copier</button></span>
+      </div>
+      <pre class="code">${hlPython(s.code)}</pre>
+    </div>
+  `).join("");
+  const solBlock = solutionRevealed[ex.id]
+    ? `<div class="sol-tabs">${tabs}</div><div id="solBodies">${bodies}</div>`
+    : solBtn;
+
+  $("#content").innerHTML = `
+    <div class="panel left">
+      <div class="pretitle">${ex.group} · ${diffLabel(ex.diff)}</div>
+      <h2 class="title">${ex.title}</h2>
+      <div class="meta-row">
+        <span class="diff ${ex.diff==='easy'?'easy':ex.diff==='medium'?'med':'hard'}">${diffLabel(ex.diff)}</span>
+        <span class="tagline">signature : <code>${ex.sig}</code></span>
+      </div>
+
+      <div class="section-h">Énoncé</div>
+      <div class="statement"><p>${ex.statement}</p></div>
+
+      <div class="section-h">Exemples</div>
+      ${examplesHtml}
+
+      <div class="section-h">Indices</div>
+      <ul class="hint-list">${hintsHtml}</ul>
+
+      <div class="section-h">Solutions</div>
+      <div style="font-size:12px;color:var(--ink-dim);margin:-8px 0 14px;line-height:1.6">Ce sont des suggestions de solutions parmi d'autres — d'autres approches valides existent.</div>
+      ${solBlock}
+      <button class="btn btn-primary mobile-cta" onclick="setMobileTab('code')" style="width:100%;margin-top:20px;display:none">
+        ⌨️ &nbsp;Passer au code →
+      </button>
+    </div>
+
+    <div class="panel right" style="padding:0">
+      <div class="editor-wrap">
+        <div class="editor-bar">
+          <span class="lbl">~/exam42/${ex.id}.py</span>
+          <div class="actions">
+            <button class="btn" onclick="resetCode()">réinitialiser</button>
+            <button class="btn btn-primary" onclick="runTests()" id="runBtn">▶ lancer les tests</button>
+          </div>
+        </div>
+        <div class="editor">
+          <textarea id="code" spellcheck="false">${ex.starter}</textarea>
+        </div>
+      </div>
+      <div class="terminal-wrap">
+        <div class="term-bar">
+          <span>sortie · grademe</span>
+          <span class="status" id="termStatus"><span class="indi"></span><span id="termStatusText">en attente</span></span>
+        </div>
+        <div class="terminal" id="terminal">
+          <div class="term-line dim">// Clique sur <b style="color:var(--accent)">▶ lancer les tests</b> pour valider ta solution.</div>
+          <div class="term-line dim">// ${ex.tests.length} cas de test seront exécutés.</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // wire solution tabs
+  $$(".sol-tab").forEach(t => t.addEventListener("click", () => {
+    const i = +t.dataset.i;
+    $$(".sol-tab").forEach(x => x.classList.remove("active"));
+    $$(".sol-body").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    $(`.sol-body[data-i="${i}"]`).classList.add("active");
+  }));
+
+  // Tab key inserts 4 spaces
+  const ta = $("#code");
+  ta.addEventListener("keydown", (e) => {
+    if(e.key === "Tab"){
+      e.preventDefault();
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      ta.value = ta.value.substring(0, start) + "    " + ta.value.substring(end);
+      ta.selectionStart = ta.selectionEnd = start + 4;
+    }
+  });
+}
+
+function revealSolutions(){
+  if(!currentEx) return;
+  solutionRevealed[currentEx.id] = true;
+  renderExercise();
+}
+
+function resetCode(){
+  if(!currentEx) return;
+  $("#code").value = currentEx.starter;
+}
+
+/* ========================================================================
+   PYODIDE INIT
+   ======================================================================== */
+async function initPyodide(){
+  $("#topStatus").textContent = "loading pyodide runtime…";
+  pyodide = await loadPyodide({
+    indexURL:"https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"
+  });
+  $("#topbar").classList.add("ready");
+  $("#topStatus").textContent = "pyodide prêt · python " + pyodide.runPython("import sys; sys.version.split()[0]");
+}
+initPyodide();
+
+/* ========================================================================
+   GRADEME — Test runner
+   ======================================================================== */
+function setStatus(state, text){
+  const s = $("#termStatus");
+  s.className = "status " + state;
+  $("#termStatusText").textContent = text;
+}
+
+function termLog(html, cls=""){
+  const t = $("#terminal");
+  const div = document.createElement("div");
+  div.className = "term-line " + cls;
+  div.innerHTML = html;
+  t.appendChild(div);
+  t.scrollTop = t.scrollHeight;
+}
+
+function termClear(){ $("#terminal").innerHTML = ""; }
+
+function deepEqual(a, b){
+  if(a === b) return true;
+  if(typeof a !== typeof b) return false;
+  if(Array.isArray(a) && Array.isArray(b)){
+    if(a.length !== b.length) return false;
+    return a.every((x,i) => deepEqual(x, b[i]));
+  }
+  if(a && b && typeof a === "object"){
+    const ka = Object.keys(a), kb = Object.keys(b);
+    if(ka.length !== kb.length) return false;
+    return ka.every(k => deepEqual(a[k], b[k]));
+  }
+  return false;
+}
+
+function compareResults(actual, expected, mode){
+  if(mode === "unordered"){
+    if(!Array.isArray(actual) || !Array.isArray(expected)) return false;
+    if(actual.length !== expected.length) return false;
+    const sa = [...actual].sort((x,y)=>x-y);
+    const se = [...expected].sort((x,y)=>x-y);
+    return deepEqual(sa, se);
+  }
+  if(mode === "groups"){
+    // list of lists, both inner and outer order do not matter
+    if(!Array.isArray(actual) || !Array.isArray(expected)) return false;
+    if(actual.length !== expected.length) return false;
+    const norm = (g) => g.map(arr => [...arr].sort()).map(a=>JSON.stringify(a)).sort();
+    return deepEqual(norm(actual), norm(expected));
+  }
+  return deepEqual(actual, expected);
+}
+
+function fmt(v){
+  return JSON.stringify(v);
+}
+
+async function runTests(){
+  if(!currentEx) return;
+  if(!pyodide){
+    termClear();
+    termLog("Pyodide est encore en cours de chargement… patiente un instant.","ko");
+    return;
+  }
+  const btn = $("#runBtn");
+  btn.disabled = true;
+  setStatus("run","en cours…");
+  termClear();
+  termLog(`<b style="color:var(--accent)">grademe</b> · ${currentEx.id}.py`,"head");
+  termLog(`exécution de ${currentEx.tests.length} cas de test…`,"dim");
+
+  const userCode = $("#code").value;
+
+  // Try to load the student's code
+  try {
+    pyodide.runPython(`
+import sys, io
+__user_globals__ = {}
+`);
+    pyodide.runPython(userCode, { globals: pyodide.globals.get("__user_globals__") });
+  } catch(e){
+    termLog("","");
+    termLog("× ERREUR DE COMPILATION","ko");
+    termLog(String(e.message).split("\n").slice(-6).join("\n"),"ko");
+    setStatus("fail","erreur");
+    btn.disabled = false;
+    return;
+  }
+
+  // Detect function name from signature (last word before "(")
+  // Tests address whichever function name appears in the signature.
+  const fnMatch = currentEx.sig.match(/def\s+([a-zA-Z_][a-zA-Z0-9_]*)/);
+  let fnName = fnMatch ? fnMatch[1] : null;
+  // Special: if exercise uses a helper (sig says "class MinStack..."), tests target the simulate helper.
+  if(currentEx.id === "min_stack") fnName = "min_stack_simulate";
+
+  if(!fnName){
+    termLog("Impossible de détecter le nom de la fonction depuis la signature.","ko");
+    setStatus("fail","erreur");
+    btn.disabled = false;
+    return;
+  }
+
+  let passed = 0, failed = 0;
+  for(let i=0; i<currentEx.tests.length; i++){
+    const t = currentEx.tests[i];
+    let actual, errMsg = null;
+    try {
+      pyodide.globals.set("__args__", pyodide.toPy(t.args));
+      pyodide.runPython(`
+__user_globals__["__result__"] = __user_globals__["${fnName}"](*__args__)
+`);
+      const raw = pyodide.runPython(`__user_globals__["__result__"]`);
+      actual = raw && raw.toJs ? raw.toJs({dict_converter: Object.fromEntries}) : raw;
+      // Pyodide proxies → JS native
+      if(actual && typeof actual.destroy === "function") {
+        const js = actual.toJs ? actual.toJs() : actual;
+        actual = js;
+      }
+    } catch(e){
+      errMsg = String(e.message).split("\n").slice(-3).join(" | ");
+      actual = "<error>";
+    }
+
+    const ok = errMsg === null && compareResults(actual, t.out, t.compare);
+    if(ok){
+      passed++;
+      const div = document.createElement("div");
+      div.className = "test-row pass";
+      div.innerHTML = `<span class="ic">✓</span><div><b>Test ${i+1}</b> · ${fnName}(${t.args.map(fmt).join(", ")}) <span style="color:var(--ink-faint)">→</span> <span style="color:var(--easy)">${fmt(t.out)}</span></div>`;
+      $("#terminal").appendChild(div);
+    } else {
+      failed++;
+      const div = document.createElement("div");
+      div.className = "test-row fail";
+      div.innerHTML = `
+        <span class="ic">×</span>
+        <div>
+          <b>Test ${i+1}</b> · ${fnName}(${t.args.map(fmt).join(", ")})
+          <div class="det">attendu <b style="color:var(--easy)">${fmt(t.out)}</b> · obtenu <b style="color:var(--red)">${errMsg ? errMsg : fmt(actual)}</b></div>
+        </div>`;
+      $("#terminal").appendChild(div);
+    }
+    $("#terminal").scrollTop = $("#terminal").scrollHeight;
+  }
+
+  const total = currentEx.tests.length;
+  termLog("","sum");
+  if(failed === 0){
+    termLog(`✓ TOUS LES TESTS PASSÉS · ${passed}/${total}`,"ok");
+    termLog(`// bien joué. tu peux passer au suivant.`,"dim");
+    setStatus("pass","réussi");
+  } else {
+    termLog(`× ${failed} test${failed>1?'s':''} échoué${failed>1?'s':''} · ${passed}/${total} passé${passed>1?'s':''}`,"ko");
+    setStatus("fail","échec");
+  }
+  btn.disabled = false;
+}
+
+function copySolution(idx){
+  if(!currentEx) return;
+  const sol = currentEx.solutions[idx];
+  if(!sol) return;
+  navigator.clipboard.writeText(sol.code).then(() => {
+    const btns = document.querySelectorAll('.sol-body button');
+    if(btns[idx]){
+      const orig = btns[idx].textContent;
+      btns[idx].textContent = "copié ✓";
+      btns[idx].style.color = "var(--accent)";
+      setTimeout(() => { btns[idx].textContent = orig; btns[idx].style.color = ""; }, 1400);
+    }
+  });
+}
+
+// expose for inline onclicks
+window.revealSolutions = revealSolutions;
+window.resetCode = resetCode;
+window.runTests = runTests;
+window.copySolution = copySolution;
+
+/* ========================================================================
+   MOBILE — hamburger + drawer + onglets
+   ======================================================================== */
+function openSidebar(){
+  $("#sidebar").classList.add("open");
+  $("#sidebarBackdrop").classList.add("visible");
+  document.body.style.overflow = "hidden";
+}
+function closeSidebar(){
+  $("#sidebar").classList.remove("open");
+  $("#sidebarBackdrop").classList.remove("visible");
+  document.body.style.overflow = "";
+}
+
+$("#hamburgerBtn").addEventListener("click", () => {
+  if($("#sidebar").classList.contains("open")) closeSidebar();
+  else openSidebar();
+});
+$("#sidebarBackdrop").addEventListener("click", closeSidebar);
+
+// Onglets mobiles
+function setMobileTab(tab){
+  const content = $("#content");
+  if(!content) return;
+  content.classList.toggle("tab-enonce", tab === "enonce");
+  content.classList.toggle("tab-code", tab === "code");
+  $$(".mobile-tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  // scroll en haut du panneau actif
+  if(tab === "enonce"){
+    const p = content.querySelector(".panel.left");
+    if(p) p.scrollTop = 0;
+  }
+}
+
+$$(".mobile-tab-btn").forEach(b => b.addEventListener("click", () => setMobileTab(b.dataset.tab)));
+
+renderList();
+</script>
+</body>
+</html>
